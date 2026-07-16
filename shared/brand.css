@@ -1,0 +1,249 @@
+/* ============================================================
+   LLL Tools — shared brand styles
+   Edit palette / logo here once; every tool inherits it.
+   ============================================================ */
+:root {
+  --bg: #f3f3f2;
+  --surface: #ffffff;
+  --ink: #222220;
+  --muted: #6f6f6a;
+  --border: #e3e3e0;
+  --accent: #222220;
+  --accent-tint: #ececea;
+  --on-accent: #ffffff;
+  --code-bg: #1f1f1d;
+  --code-ink: #f4f4f2;
+  --logo-invert: 0;
+  --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+          "Hiragino Sans", "Noto Sans CJK JP", "Noto Sans KR", "Microsoft YaHei", sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Global navbar ---------- */
+.lll-nav {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; padding-top: max(10px, env(safe-area-inset-top));
+  background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.lll-nav .nav-logo { flex: none; line-height: 0; }
+.lll-nav .nav-logo img { height: 26px; width: auto; display: block; }
+.nav-links {
+  display: flex; gap: 4px; flex: 1;
+  overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.nav-links::-webkit-scrollbar { display: none; }
+.nav-links a {
+  font-size: 14px; font-weight: 600; color: var(--muted); text-decoration: none;
+  padding: 6px 12px; border-radius: 8px; white-space: nowrap;
+}
+.nav-links a:hover { background: var(--bg); color: var(--ink); }
+.nav-links a.active { background: var(--accent-tint); color: var(--ink); }
+.nav-lang { flex: none; }
+
+/* ---------- Language switcher ---------- */
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px 8px 6px 10px;
+}
+.lang-switch svg { color: var(--muted); flex: none; }
+.lang-switch select {
+  border: none;
+  background: transparent;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.lang-switch:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* fixed position variant used on tool upload screens */
+.lang-switch.fixed {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: 16px;
+}
+
+/* ---------- Brand lockup ---------- */
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-logo { flex: none; line-height: 0; }
+.brand-logo img { display: block; height: 36px; width: auto; }
+.brand-name {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  padding-left: 12px;
+  border-left: 1px solid var(--border);
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--on-accent);
+  background: var(--accent);
+  border: none;
+  border-radius: 10px;
+  padding: 12px 22px;
+  min-height: 46px;
+  cursor: pointer;
+  transition: filter .15s ease;
+}
+.btn:hover { filter: brightness(1.35); }
+.btn:active { filter: brightness(0.9); }
+
+/* ---------- Upload screen (shared by tools) ---------- */
+.uploader {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  gap: 28px;
+}
+.dropzone {
+  width: 100%;
+  max-width: 440px;
+  background: var(--surface);
+  border: 2px dashed var(--border);
+  border-radius: 16px;
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+.dropzone:hover { border-color: var(--accent); }
+.dropzone:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.dropzone.dragging { border-color: var(--accent); background: var(--accent-tint); }
+.dz-icon {
+  width: 52px; height: 52px; margin: 0 auto 18px;
+  border-radius: 12px; background: var(--accent-tint);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent);
+}
+.dz-title { font-size: 17px; font-weight: 600; margin: 0 0 4px; letter-spacing: -0.01em; }
+.dz-sub { font-size: 14px; color: var(--muted); margin: 0 0 22px; }
+.privacy {
+  font-size: 13px; color: var(--muted); max-width: 440px;
+  text-align: center; line-height: 1.6;
+}
+.error {
+  color: #b42318; background: #fef3f2; border: 1px solid #fda29b;
+  border-radius: 8px; padding: 10px 14px; font-size: 13px;
+  max-width: 440px; text-align: center;
+}
+
+/* ---------- Viewer screen (shared by tools) ---------- */
+.viewer { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--surface); }
+.toolbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; padding-top: max(10px, env(safe-area-inset-top));
+  border-bottom: 1px solid var(--border); background: var(--surface);
+}
+.tool-btn {
+  font-family: var(--sans); font-size: 14px; font-weight: 600; color: var(--ink);
+  background: transparent; border: 1px solid var(--border); border-radius: 9px;
+  padding: 8px 12px; min-height: 40px;
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap;
+}
+.tool-btn:hover { background: var(--bg); }
+.tool-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.filename {
+  flex: 1; min-width: 0; font-family: var(--mono); font-size: 13px; color: var(--muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center;
+}
+.frame { flex: 1; width: 100%; border: none; background: #fff; }
+
+.hidden { display: none !important; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+
+/* ============================================================
+   Dark theme
+   Applied when <html data-theme="dark">. Set by shared/theme.js,
+   which honours the OS setting and remembers a manual override.
+   ============================================================ */
+:root[data-theme="dark"] {
+  --bg: #17171a;
+  --surface: #202024;
+  --ink: #ececea;
+  --muted: #9a9a95;
+  --border: #34343a;
+  --accent: #ececea;
+  --accent-tint: #2b2b31;
+  --on-accent: #17171a;
+  --code-bg: #101012;
+  --code-ink: #ececea;
+  --logo-invert: 1;
+}
+
+/* Logo is dark ink artwork; invert it on dark backgrounds. */
+.brand-logo img,
+.lll-nav .nav-logo img,
+.hero-logo img { filter: invert(var(--logo-invert)); }
+
+/* Buttons use --on-accent so text stays readable in both themes. */
+.btn { color: var(--on-accent); }
+.btn:hover { filter: brightness(1.15); }
+
+/* Theme toggle button in the navbar */
+.theme-btn {
+  flex: none;
+  width: 34px; height: 34px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; color: var(--muted);
+  border: 1px solid var(--border); border-radius: 9px; cursor: pointer;
+}
+.theme-btn:hover { color: var(--ink); background: var(--bg); }
+.theme-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.theme-btn .moon { display: none; }
+:root[data-theme="dark"] .theme-btn .sun { display: none; }
+:root[data-theme="dark"] .theme-btn .moon { display: block; }
+
+/* ---------- Shared loading state ---------- */
+.lll-loading {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; padding: 48px 20px; color: var(--muted); font-size: 14px;
+}
+.lll-spinner {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 2.5px solid var(--border); border-top-color: var(--ink);
+  animation: lll-spin .7s linear infinite;
+}
+@keyframes lll-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .lll-spinner { animation-duration: 2s; }
+}
+
+/* ---------- Drag & drop hint (desktop only) ---------- */
+.drop-hint { display: none; font-size: 13px; color: var(--muted); margin: 14px 0 0; }
+@media (hover: hover) and (pointer: fine) {
+  .drop-hint { display: block; }
+}
+
+/* ---------- Error state ---------- */
+.error { display: flex; align-items: center; gap: 9px; justify-content: center; }
+:root[data-theme="dark"] .error {
+  color: #ffb4ab; background: #3a1d1a; border-color: #6b2f28;
+}
