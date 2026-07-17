@@ -1,0 +1,220 @@
+/* ============================================================
+   Guess the Correlation — tool-wide styles
+   Shared by index / tutorial / learn. Page-specific rules stay in
+   each page's own <style> block.
+   shared/brand.css owns the LLL-wide palette; this owns the bits
+   that are specific to this tool but common to all of its pages.
+   ============================================================ */
+
+/* ---------- the correlation scale ----------
+   Single source of truth for blue -> grey -> orange. Drives the
+   strength guide, the slider rail, and every dot on every page.
+   corr.js reads these back out of CSS rather than hardcoding them. */
+:root {
+  --r-neg: #4a7fb0;
+  --r-mid: #c9c9c4;
+  --r-pos: #e0843c;
+  --r-scale: linear-gradient(90deg, var(--r-neg), var(--r-mid) 50%, var(--r-pos));
+  --tier-1: #0f6e56;
+  --tier-2: #3f7d43;
+  --tier-3: #a5762a;
+  --tier-4: #a04a3c;
+  --grid: rgba(0,0,0,.06);
+}
+:root[data-theme="dark"] {
+  --r-neg: #6ea3d2;
+  --r-mid: #9d9d98;
+  --r-pos: #eb9a5c;
+  --tier-1: #57c9a6;
+  --tier-2: #77c07c;
+  --tier-3: #d8ac5c;
+  --tier-4: #e08b7c;
+  --grid: rgba(255,255,255,.07);
+}
+
+body { justify-content: flex-start; }
+
+/* ---------- navbar ---------- */
+.nav-lang { display: flex; align-items: center; gap: 8px; }
+.lll-nav { position: sticky; top: 0; z-index: 40; }
+
+/* ---------- page shell ---------- */
+.wrap {
+  width: 100%; max-width: 560px; margin: 0 auto;
+  padding: 20px 20px 48px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.wrap.wide { max-width: 640px; }
+
+.pagehead h1 { font-size: 24px; letter-spacing: -0.02em; margin: 0 0 6px; }
+.pagehead p { font-size: 14px; line-height: 1.65; color: var(--muted); margin: 0; }
+
+/* ---------- sections ---------- */
+.section { margin-top: 26px; }
+.section h2 { font-size: 16px; font-weight: 700; margin: 0 0 12px; }
+.section h3 { font-size: 14px; font-weight: 700; margin: 0 0 6px; }
+.prose { background: var(--accent-tint); border-radius: 14px; padding: 16px; font-size: 14px; line-height: 1.65; }
+.callout { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--r-pos);
+  border-radius: 12px; padding: 14px 16px; }
+.callout h3 { margin: 0 0 6px; font-size: 14px; }
+.callout p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--muted); }
+.tipbox { margin-top: 12px; background: var(--surface); border: 1px solid var(--border);
+  border-left: 4px solid var(--r-pos); border-radius: 12px; padding: 12px 14px;
+  font-size: 13px; line-height: 1.6; color: var(--muted); }
+
+/* ---------- plots ---------- */
+.plotcard { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+.plot { width: 100%; height: auto; display: block; --dotc: var(--r-mid); }
+.axis { stroke: var(--border); stroke-width: 1.2; }
+.grid { stroke: var(--grid); stroke-width: 1; }
+.tick { stroke: var(--border); stroke-width: 1; }
+.axlabel { fill: var(--muted); font-family: var(--sans); font-size: 9px; }
+
+/* Dots read their colour from --dotc so a single property update recolours
+   the whole cloud, and `transition: fill` animates it for free. */
+.dot { fill: var(--dotc); opacity: .8; transition: fill .45s ease;
+  transform-box: fill-box; transform-origin: center;
+  animation: dotIn .34s cubic-bezier(.2,1.3,.4,1) backwards; }
+:root[data-theme="dark"] .dot { opacity: .88; }
+@keyframes dotIn { from { opacity: 0; transform: scale(.25); } }
+
+.fit { stroke: var(--ink); stroke-width: 2; stroke-linecap: round; opacity: 0; }
+.fit.show { opacity: .85; animation: drawIn .55s ease-out forwards; }
+@keyframes drawIn { from { stroke-dashoffset: var(--len); } to { stroke-dashoffset: 0; } }
+
+/* ---------- guess slider ---------- */
+.guessbox { display:flex; flex-direction:column; gap:8px; }
+.guessrow { display:flex; align-items:center; gap:8px; }
+
+/* The value readout is an input: typing and dragging are both always live,
+   with no mode to switch between them. */
+input.guessval { flex:none; width:78px; font-family:var(--mono); font-size:21px; font-weight:700;
+  text-align:center; font-variant-numeric:tabular-nums; color:var(--ink);
+  background:var(--bg); border:1px solid var(--border); border-radius:9px; padding:8px 2px;
+  transition:border-color .15s ease, box-shadow .15s ease; }
+input.guessval:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-tint); }
+input.guessval:disabled { opacity:.75; }
+
+/* iOS shows no minus key on a decimal keypad, so on touch this button is the
+   only way to enter a negative r at all. */
+.signbtn { flex:none; width:36px; height:41px; font-family:var(--mono); font-size:16px; font-weight:700;
+  color:var(--ink); background:var(--surface); border:1px solid var(--border); border-radius:9px;
+  cursor:pointer; transition:border-color .15s ease, background .15s ease; }
+.signbtn:hover { border-color:var(--muted); }
+.signbtn:active { background:var(--bg); }
+.signbtn:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+.signbtn:disabled { opacity:.4; cursor:default; }
+
+.enterhint { font-size:11.5px; color:var(--muted); text-align:center; margin:2px 0 0; }
+/* Enter-to-check is a keyboard affordance; don't promise it to touch users. */
+@media (hover: none) { .enterhint { display:none; } }
+
+.sliderwrap { position:relative; flex:1; height:46px; }
+.rail { position:absolute; left:0; right:0; top:29px; height:8px; border-radius:999px;
+  background:var(--r-scale); opacity:.4; transition:opacity .3s ease; }
+.sliderwrap.revealed .rail { opacity:1; }
+.band { position:absolute; top:27px; height:12px; border-radius:3px; display:none;
+  background:currentColor; opacity:.32; transform-origin:left center; }
+.band.on { display:block; animation:bandIn .45s cubic-bezier(.2,1,.4,1); }
+@keyframes bandIn { from { transform:scaleX(.02); } }
+.truth { position:absolute; top:21px; width:3px; height:24px; border-radius:2px;
+  background:var(--ink); display:none; }
+.truth.on { display:block; animation:popIn .3s cubic-bezier(.2,1.3,.4,1); }
+.truth .tval { position:absolute; bottom:29px; left:50%; transform:translateX(-50%);
+  font-family:var(--mono); font-size:11px; font-weight:700; white-space:nowrap;
+  background:var(--ink); color:var(--on-accent); padding:2px 6px; border-radius:5px; }
+.truth .tval::after { content:""; position:absolute; top:100%; left:50%; margin-left:-3px;
+  border:3px solid transparent; border-top-color:var(--ink); }
+
+input[type=range] { position:absolute; inset:0; width:100%; margin:0; background:transparent;
+  -webkit-appearance:none; appearance:none; cursor:pointer; }
+input[type=range]:focus { outline:none; }
+input[type=range]::-webkit-slider-runnable-track { height:8px; background:transparent; margin-top:29px; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px;
+  border-radius:50%; background:var(--surface); border:2.5px solid var(--ink);
+  margin-top:-6px; box-shadow:0 1px 5px rgba(0,0,0,.22); transition:transform .12s ease; }
+input[type=range]:active::-webkit-slider-thumb { transform:scale(1.15); }
+input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow:0 0 0 4px var(--accent-tint); }
+input[type=range]::-moz-range-track { height:8px; background:transparent; }
+input[type=range]::-moz-range-thumb { width:20px; height:20px; border-radius:50%;
+  background:var(--surface); border:2.5px solid var(--ink); box-shadow:0 1px 5px rgba(0,0,0,.22); }
+input[type=range]:disabled { cursor:default; }
+
+.scaleends { display:flex; justify-content:space-between; font-size:11px; color:var(--muted);
+  font-family:var(--mono); }
+.controls { display:flex; gap:10px; }
+
+/* ---------- result ---------- */
+.result { border-radius:14px; padding:16px; border:1px solid var(--border);
+  border-left:4px solid var(--tierc, var(--accent));
+  background:var(--accent-tint);
+  animation:resultIn .3s ease-out; }
+@supports (background: color-mix(in srgb, red 9%, blue)) {
+  .result { background: color-mix(in srgb, var(--tierc, var(--accent)) 10%, var(--surface)); }
+}
+@keyframes resultIn { from { opacity:0; transform:translateY(-6px); } }
+.verdict { font-size:16px; font-weight:700; color:var(--tierc, var(--ink));
+  display:flex; align-items:baseline; gap:8px; }
+.verdict .pts { font-family:var(--mono); font-size:14px; margin-left:auto; }
+.rline { margin-top:10px; font-size:15px; }
+.rline .num { font-family:var(--mono); font-weight:700; }
+.rmiss { margin-top:4px; font-size:13px; color:var(--muted); font-family:var(--mono); }
+.rdesc { margin-top:8px; font-size:14px; line-height:1.6; color:var(--muted); }
+.trap { margin-top:12px; background:var(--surface); border:1px solid var(--border);
+  border-left:4px solid var(--r-pos); border-radius:10px; padding:11px 13px; }
+.trap .tt { font-size:11px; font-weight:800; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--r-pos); margin-bottom:5px; }
+.trap p { margin:0 0 6px; font-size:13px; line-height:1.6; color:var(--ink); }
+.trap .tlink { margin:0; font-size:13px; }
+.trap .tlink a { color:var(--muted); }
+
+
+/* ---------- example plot grid ---------- */
+.exgrid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 12px; }
+@media (max-width: 460px) { .exgrid { grid-template-columns: 1fr; } }
+.ex { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px; }
+.ex svg { width: 100%; height: auto; display: block; }
+.ex .cap { font-size: 11px; color: var(--muted); text-align: center; margin-top: 6px; line-height: 1.4; }
+.ex .rv { font-family: var(--mono); font-size: 12px; font-weight: 700; text-align: center; margin-top: 4px; }
+
+/* ---------- strength guide ---------- */
+.guidebar { height: 14px; border-radius: 999px; background: var(--r-scale); }
+.guidelabels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+/* ---------- buttons ---------- */
+.btn.secondary { background: transparent; color: var(--ink); border: 1px solid var(--border); }
+.btn.secondary:hover { background: var(--bg); filter: none; }
+.btn:disabled { opacity: .4; cursor: default; filter: none; }
+.linkbtn { background: none; border: none; padding: 0; font-family: var(--sans);
+  font-size: 12px; color: var(--muted); text-decoration: underline; cursor: pointer; }
+.linkbtn:hover { color: var(--ink); }
+
+/* ---------- cross-page call to action ---------- */
+.cta { display: flex; align-items: center; gap: 12px; background: var(--accent-tint);
+  border-radius: 14px; padding: 14px 16px; text-decoration: none; color: var(--ink); }
+.cta:hover { filter: brightness(.97); }
+.cta .ct { flex: 1; }
+.cta .ct b { font-size: 14px; display: block; }
+.cta .ct span { font-size: 13px; color: var(--muted); }
+.cta .arw { font-size: 18px; color: var(--muted); }
+
+/* ---------- footer ---------- */
+.foot { margin-top: 34px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; }
+.foot p { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+.foot a.gh { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600;
+  color: var(--ink); text-decoration: none; border: 1px solid var(--border); border-radius: 9px;
+  padding: 8px 14px; background: var(--surface); }
+.foot a.gh:hover { border-color: var(--accent); }
+
+/* ---------- toast ---------- */
+.toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
+  background: var(--ink); color: var(--on-accent); font-size: 13px; font-weight: 600;
+  padding: 10px 18px; border-radius: 999px; z-index: 70; box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  animation: toastIn .25s ease-out; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(8px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .dot { animation: none !important; }
+  .fit.show { animation: none !important; stroke-dashoffset: 0 !important; }
+  .toast { animation: none !important; }
+}
