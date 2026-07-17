@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#222220">
+<link rel="icon" href="shared/favicon.svg">
+<link rel="stylesheet" href="shared/brand.css">
+<link rel="stylesheet" href="site.css">
+<title>Tutorial</title>
+<style>
+  /* ---------- stepper ---------- */
+  .steps { display:flex; gap:6px; }
+  .steps button { flex:1; height:6px; padding:0; border:none; border-radius:999px;
+    background:var(--border); cursor:pointer; transition:background .2s ease; }
+  .steps button.seen { background:var(--muted); }
+  .steps button.on { background:var(--accent); }
+  .steps button:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+  .stepno { font-size:12px; color:var(--muted); text-align:center; margin:0;
+    font-variant-numeric:tabular-nums; }
+
+  /* ---------- step card ---------- */
+  .tcard { background:var(--surface); border:1px solid var(--border); border-radius:16px;
+    padding:18px; display:flex; flex-direction:column; gap:14px;
+    animation:stepIn .3s ease-out; }
+  @keyframes stepIn { from { opacity:0; transform:translateY(8px); } }
+  .tcard h2 { font-size:18px; margin:0; letter-spacing:-0.01em; }
+  .tcard .lede { font-size:14px; line-height:1.65; color:var(--muted); margin:0; }
+  .tcard .punch { font-size:14px; line-height:1.65; margin:0; padding:11px 13px;
+    background:var(--accent-tint); border-radius:10px; }
+  .tcard .punch b { font-family:var(--mono); }
+  .tnav { display:flex; gap:10px; }
+  .tnav .btn { flex:1; }
+
+  /* ---------- step 1: dot readout ---------- */
+  #p1 .dot { cursor:pointer; }
+  #p1 .dot.sel { stroke:var(--ink); stroke-width:2; opacity:1; }
+  .readout { font-size:14px; text-align:center; padding:10px; border-radius:10px;
+    background:var(--bg); border:1px solid var(--border); min-height:42px;
+    display:flex; align-items:center; justify-content:center; }
+  .readout.empty { color:var(--muted); font-size:13px; }
+  .readout b { font-family:var(--mono); }
+
+  /* ---------- step 2: the sweep ---------- */
+  .sweepval { text-align:center; }
+  .sweepval .rv { font-family:var(--mono); font-size:32px; font-weight:800;
+    font-variant-numeric:tabular-nums; line-height:1.1; }
+  .sweepval .lb { font-size:13px; color:var(--muted); }
+  .sweeprow { display:flex; align-items:center; gap:12px; }
+
+  /* ---------- step 3: two plots ---------- */
+  .pair { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .pair .p { background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:8px; }
+  .pair .p svg { width:100%; height:auto; display:block; }
+  .pair .p .cap { text-align:center; margin-top:6px; }
+  .pair .p .cap .rv { font-family:var(--mono); font-size:15px; font-weight:800; }
+  .pair .p .cap .lb { font-size:11px; color:var(--muted); }
+
+  /* ---------- step 4: trap tabs ---------- */
+  .tabs { display:flex; gap:3px; background:var(--bg); border:1px solid var(--border);
+    border-radius:10px; padding:3px; }
+  .tabs button { flex:1; font-family:var(--sans); font-size:12.5px; font-weight:600;
+    color:var(--muted); background:transparent; border:none; border-radius:7px;
+    padding:7px 4px; cursor:pointer; }
+  .tabs button.on { background:var(--surface); color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  .tabs button:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  .trapr { text-align:center; font-family:var(--mono); font-size:20px; font-weight:800; }
+
+  /* ---------- step 5 ---------- */
+  .t5done { display:flex; flex-direction:column; gap:12px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tcard { animation:none !important; }
+  }
+</style>
+<script>
+  (function(){try{var t=localStorage.getItem("lll_theme");
+  if(t!=="dark"&&t!=="light"){t=(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light";}
+  document.documentElement.setAttribute("data-theme",t);}catch(e){}})();
+</script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="pagehead">
+      <h1 data-i18n="tutTitle">Tutorial</h1>
+      <p data-i18n="tutLede">Five short steps. By the end you'll know what the number means.</p>
+    </div>
+
+    <div class="steps" id="steps"></div>
+    <p class="stepno" id="stepNo"></p>
+
+    <!-- ---------- 1 ---------- -->
+    <div class="tcard" id="step1">
+      <h2 data-i18n="t1Title">Every dot is one thing, measured twice</h2>
+      <p class="lede" data-i18n="t1Body">Here are 14 students. How long each one revised is the left-to-right position. The mark they got is the height. Tap any dot.</p>
+      <svg class="plot" id="p1" viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="readout empty" id="r1" data-i18n="t1Tap">Tap a dot to read it</div>
+    </div>
+
+    <!-- ---------- 2 ---------- -->
+    <div class="tcard hidden" id="step2">
+      <h2 data-i18n="t2Title">r is one number for the whole cloud</h2>
+      <p class="lede" data-i18n="t2Body">These are the same 44 points every time — only rearranged. Drag the slider and watch what each value of r actually looks like.</p>
+      <svg class="plot" id="p2" viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="sweepval">
+        <div class="rv" id="r2v">+0.00</div>
+        <div class="lb" id="r2l"></div>
+      </div>
+      <div class="sweeprow">
+        <div class="sliderwrap" id="sw2">
+          <span class="rail"></span>
+          <input type="range" id="s2" min="-1" max="1" step="0.01" value="0" aria-label="r">
+        </div>
+      </div>
+      <div class="scaleends"><span>&#8722;1.0</span><span>0</span><span>+1.0</span></div>
+    </div>
+
+    <!-- ---------- 3 ---------- -->
+    <div class="tcard hidden" id="step3">
+      <h2 data-i18n="t3Title">Strength is tightness, not steepness</h2>
+      <p class="lede" data-i18n="t3Body">Both clouds follow the same line. The only thing that changed is how closely the dots hug it — and that is exactly what r measures.</p>
+      <div class="pair">
+        <div class="p"><svg id="p3a" viewBox="0 0 130 110" xmlns="http://www.w3.org/2000/svg"></svg>
+          <div class="cap"><div class="rv" id="r3a"></div><div class="lb" data-i18n="t3Tight">tight</div></div></div>
+        <div class="p"><svg id="p3b" viewBox="0 0 130 110" xmlns="http://www.w3.org/2000/svg"></svg>
+          <div class="cap"><div class="rv" id="r3b"></div><div class="lb" data-i18n="t3Loose">loose</div></div></div>
+      </div>
+      <p class="punch" data-i18n="t3Punch">Same line, different spread — so a steeper line does not mean a stronger correlation.</p>
+    </div>
+
+    <!-- ---------- 4 ---------- -->
+    <div class="tcard hidden" id="step4">
+      <h2 data-i18n="t4Title">r only sees straight lines</h2>
+      <p class="lede" data-i18n="t4Body">All three of these score about r = +0.8 — the same as a solid straight-line relationship. None of them is a straight line.</p>
+      <div class="tabs" id="trapTabs">
+        <button type="button" data-k="curve" class="on" data-i18n="tabCurve">Curve</button>
+        <button type="button" data-k="lever" data-i18n="tabLever">Outlier</button>
+        <button type="button" data-k="cluster" data-i18n="tabCluster">Clusters</button>
+      </div>
+      <svg class="plot" id="p4" viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="trapr" id="r4"></div>
+      <p class="punch" id="t4What"></p>
+    </div>
+
+    <!-- ---------- 5 ---------- -->
+    <div class="tcard hidden" id="step5">
+      <h2 data-i18n="t5Title">Your turn</h2>
+      <p class="lede" data-i18n="t5Body">One real round. Drag to your best guess, then check. The true value gets marked on the slider so you can see the gap.</p>
+      <svg class="plot" id="p5" viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="guessbox">
+        <div class="guessrow">
+          <input class="guessval" id="g5" type="text" inputmode="decimal" value="0.00"
+                 maxlength="6" autocomplete="off" autocorrect="off" spellcheck="false" data-i18n-aria="guessAria">
+          <button type="button" class="signbtn" id="sign5" data-i18n-aria="signAria">&plusmn;</button>
+          <div class="sliderwrap" id="sw5">
+            <span class="rail"></span>
+            <span class="band" id="b5"></span>
+            <span class="truth" id="tm5"><span class="tval" id="tv5"></span></span>
+            <input type="range" id="s5" min="-1" max="1" step="0.01" value="0" aria-label="correlation guess">
+          </div>
+        </div>
+        <div class="scaleends"><span>&#8722;1.0</span><span>0</span><span>+1.0</span></div>
+      </div>
+      <button class="btn" id="c5" data-i18n="checkBtn">Check</button>
+      <div class="result hidden" id="res5">
+        <div class="verdict"><span id="v5"></span></div>
+        <div class="rline"><span data-i18n="actual">Actual</span>: <span class="num" id="a5"></span> &#183; <span id="l5"></span></div>
+        <div class="rmiss" id="m5"></div>
+      </div>
+      <a class="cta hidden" href="index.html" id="cta5">
+        <span class="ct"><b data-i18n="t5CtaT">Play for real</b><span data-i18n="t5CtaB">Practice, a 60-second run, or today's daily.</span></span>
+        <span class="arw">&rarr;</span>
+      </a>
+    </div>
+
+    <div class="tnav">
+      <button class="btn secondary" id="prevBtn" data-i18n="tutPrev">Back</button>
+      <button class="btn" id="nextBtn" data-i18n="tutNext">Next</button>
+    </div>
+
+    <div class="section">
+      <a class="cta" href="learn.html">
+        <span class="ct"><b data-i18n="ctaLearnT">How correlation works</b><span data-i18n="ctaLearnB">Reading plots, the strength scale, and what r can't tell you.</span></span>
+        <span class="arw">&rarr;</span>
+      </a>
+    </div>
+
+    <div class="foot">
+      <p data-i18n="footNote">Part of the LLL Series OSS.</p>
+      <a class="gh" href="https://github.com/LLL-development/lll-correlation" target="_blank" rel="noopener">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        <span data-i18n="viewGithub">View on GitHub</span>
+      </a>
+    </div>
+  </div>
+
+  <script src="shared/theme.js"></script>
+  <script src="shared/i18n.js"></script>
+  <script src="strings.js"></script>
+  <script src="corr.js"></script>
+  <script src="nav.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>
