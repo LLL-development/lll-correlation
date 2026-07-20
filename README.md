@@ -169,12 +169,50 @@ touch device it is the only way to type a negative r.
 No build step and no dependencies — plain HTML, CSS, and JavaScript.
 
 ```bash
-npx serve .
+npx serve -p 5500 .
 ```
+
+Pin the port explicitly rather than letting it pick one at random. The service worker is
+scoped per-origin (host **and** port), so a fresh random port every restart means a fresh,
+unrelated registration every time — mostly harmless, but it multiplies stale registrations
+in DevTools and makes "did the SW update?" harder to reason about while developing.
+`python -m http.server 5500` works the same way.
 
 Then open the printed `localhost` URL. A static server is required: the pages load
 `shared/`, `site.css` and the JS as separate files, and `localStorage` is unreliable on an
 opaque `file://` origin, so best score and the daily would silently fail to persist.
+
+## Progressive Web App
+
+`manifest.json` and `sw.js` make the tool installable and give it an offline app shell.
+
+**What's cached.** `sw.js` precaches the static assets — `site.css`, `corr.js`, `nav.js`,
+`strings.js`, and each page's own JS, plus `shared/*` — cache-first once loaded. **HTML
+pages are deliberately never cached or intercepted.** Every navigation (clicking a nav link,
+typing a URL, hitting reload) goes straight to the network, exactly as if there were no
+service worker at all. Page loads always show the current file; only the supporting assets
+get offline treatment.
+
+That trade-off exists because of a real failure mode: a service worker that *does*
+intercept navigations has to have a correct answer for every navigation, forever, including
+after the origin's cache has gone stale or missing. Get that fallback path wrong even once —
+which the first version of this shipped with — and a page navigation resolves with
+`undefined` instead of a response, which Chrome reports as `net::ERR_FAILED` and looks
+exactly like a missing file. Excluding navigations from interception makes that entire class
+of bug structurally impossible rather than merely less likely.
+
+**If a page ever fails to load with `net::ERR_FAILED` while a service worker is registered**
+(most likely from testing an older version of this tool, before the fix above), the fix is:
+DevTools → **Application** → **Storage** → **Clear site data**, then open the page in a
+**new tab** — an already-open tab stays controlled by whichever worker was active when it
+loaded, so a plain reload isn't always enough to shake a bad one loose.
+
+**Cache versioning.** `sw.js` has a `CACHE_VERSION` string. Bump it whenever any file in
+`CORE_ASSETS` changes — old caches are deleted automatically on the next `activate`, but only
+once a version bump makes the old one stop matching.
+
+**Disabling it entirely.** Comment out the `serviceWorker.register(...)` call in `app.js`. No
+other file depends on the service worker existing.
 
 ## How it works
 
