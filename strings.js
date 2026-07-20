@@ -161,7 +161,21 @@ var LLL_CORR_STRINGS = {
     causeConfT: "第3の要因が両方を動かしているかもしれない",
     causeConfB: "アイスの売上と水の事故は一緒に増えます。どちらかが原因なのではなく、暑さが両方を引き起こしています。",
     causeRevT: "原因と結果が逆かもしれない",
-    causeRevB: "体力のある人ほどよく運動します。運動したから体力がついたのか、体力があるから運動が苦にならないのか。相関だけでは決められません。"
+    causeRevB: "体力のある人ほどよく運動します。運動したから体力がついたのか、体力があるから運動が苦にならないのか。相関だけでは決められません。",
+
+    /* ---- CSV upload ---- */
+    uploadTitle: "自分のデータで試す",
+    uploadLede: "2列の数値からなる CSV をアップロードしてください。1列目が x、2列目が y として扱われ、散布図と r を表示します。",
+    uploadBtn: "CSV ファイルを選ぶ",
+    uploadIdle: "ファイル未読み込み。",
+    uploadReading: "%s を読み込み中…",
+    uploadOk: "%s — %s 個の点を表示しました。",
+    uploadSkipped: "%s 行は数値でなかったためスキップしました。",
+    uploadPoints: "%s 点",
+    uploadTooFew: "相関を計算するには、数値の行が少なくとも 3 つ必要です。",
+    uploadTooBig: "ファイルが 5 MB を超えています。もう少し小さいものを試してください。",
+    uploadParseErr: "CSV として読み取れませんでした。",
+    uploadReadErr: "ファイルを読み込めませんでした。"
   },
 
   /* ---------------------------------------------------------- English */
@@ -319,7 +333,21 @@ var LLL_CORR_STRINGS = {
     causeConfT: "A third thing might drive both",
     causeConfB: "Ice cream sales and drownings rise together. Neither causes the other — hot weather causes both.",
     causeRevT: "The arrow might point the other way",
-    causeRevB: "Fit people exercise more. Does exercise make them fit, or does being fit make exercise appealing? The correlation alone can’t say."
+    causeRevB: "Fit people exercise more. Does exercise make them fit, or does being fit make exercise appealing? The correlation alone can’t say.",
+
+    /* ---- CSV upload ---- */
+    uploadTitle: "Try your own data",
+    uploadLede: "Upload a CSV with two numeric columns — the first is x, the second is y. We'll plot it and compute r.",
+    uploadBtn: "Choose CSV file",
+    uploadIdle: "No file loaded.",
+    uploadReading: "Reading %s…",
+    uploadOk: "%s — %s points plotted.",
+    uploadSkipped: "%s rows skipped (non-numeric).",
+    uploadPoints: "%s points",
+    uploadTooFew: "Need at least 3 numeric rows to compute a correlation.",
+    uploadTooBig: "File is larger than 5 MB. Try a smaller sample.",
+    uploadParseErr: "Couldn't parse that as CSV.",
+    uploadReadErr: "Couldn't read the file."
   },
 
   /* ---------------------------------------------------------- 简体中文 */
@@ -477,7 +505,21 @@ var LLL_CORR_STRINGS = {
     causeConfT: "可能有第三个因素同时影响两者",
     causeConfB: "冰淇淋销量和溺水人数一起上升。不是谁导致谁，而是天热同时造成了两者。",
     causeRevT: "因果方向可能是反的",
-    causeRevB: "体能好的人运动更多。是运动让他们体能好，还是体能好让运动变得轻松？光看相关无法判断。"
+    causeRevB: "体能好的人运动更多。是运动让他们体能好，还是体能好让运动变得轻松？光看相关无法判断。",
+
+    /* ---- CSV upload ---- */
+    uploadTitle: "上传你自己的数据",
+    uploadLede: "上传两列数值的 CSV：第一列作为 x，第二列作为 y。我们会画出散点图并计算 r。",
+    uploadBtn: "选择 CSV 文件",
+    uploadIdle: "尚未加载文件。",
+    uploadReading: "正在读取 %s……",
+    uploadOk: "%s —— 已绘制 %s 个点。",
+    uploadSkipped: "有 %s 行不是数值，已跳过。",
+    uploadPoints: "%s 个点",
+    uploadTooFew: "至少需要 3 行数值才能计算相关系数。",
+    uploadTooBig: "文件超过 5 MB，请换一个更小的样本。",
+    uploadParseErr: "无法把这个文件解析为 CSV。",
+    uploadReadErr: "无法读取该文件。"
   },
 
   /* ---------------------------------------------------------- 繁體中文 */
@@ -635,7 +677,21 @@ var LLL_CORR_STRINGS = {
     causeConfT: "可能有第三個因素同時影響兩者",
     causeConfB: "冰淇淋銷量和溺水人數一起上升。不是誰導致誰，而是天熱同時造成了兩者。",
     causeRevT: "因果方向可能是反的",
-    causeRevB: "體能好的人運動更多。是運動讓他們體能好，還是體能好讓運動變得輕鬆？光看相關無法判斷。"
+    causeRevB: "體能好的人運動更多。是運動讓他們體能好，還是體能好讓運動變得輕鬆？光看相關無法判斷。",
+
+    /* ---- CSV upload ---- */
+    uploadTitle: "上傳你自己的資料",
+    uploadLede: "上傳兩欄數值的 CSV：第一欄作為 x，第二欄作為 y。我們會畫出散點圖並計算 r。",
+    uploadBtn: "選擇 CSV 檔案",
+    uploadIdle: "尚未載入檔案。",
+    uploadReading: "正在讀取 %s……",
+    uploadOk: "%s —— 已繪製 %s 個點。",
+    uploadSkipped: "有 %s 列不是數值，已略過。",
+    uploadPoints: "%s 個點",
+    uploadTooFew: "至少需要 3 列數值才能計算相關係數。",
+    uploadTooBig: "檔案超過 5 MB，請換一個更小的樣本。",
+    uploadParseErr: "無法把這個檔案解析為 CSV。",
+    uploadReadErr: "無法讀取該檔案。"
   },
 
   /* ---------------------------------------------------------- 한국어 */
@@ -793,7 +849,21 @@ var LLL_CORR_STRINGS = {
     causeConfT: "제3의 요인이 둘 다 움직일 수 있습니다",
     causeConfB: "아이스크림 판매와 익사 사고는 함께 늘어납니다. 서로가 원인이 아니라 더운 날씨가 둘 다 일으킵니다.",
     causeRevT: "인과의 방향이 반대일 수 있습니다",
-    causeRevB: "체력이 좋은 사람이 운동을 더 합니다. 운동해서 체력이 좋아진 걸까요, 체력이 좋아서 운동이 편한 걸까요? 상관만으로는 알 수 없습니다."
+    causeRevB: "체력이 좋은 사람이 운동을 더 합니다. 운동해서 체력이 좋아진 걸까요, 체력이 좋아서 운동이 편한 걸까요? 상관만으로는 알 수 없습니다.",
+
+    /* ---- CSV upload ---- */
+    uploadTitle: "내 데이터로 해보기",
+    uploadLede: "숫자 두 열이 있는 CSV를 업로드하세요. 첫 열이 x, 두 번째 열이 y입니다. 산점도와 r을 보여드립니다.",
+    uploadBtn: "CSV 파일 선택",
+    uploadIdle: "불러온 파일이 없습니다.",
+    uploadReading: "%s 읽는 중…",
+    uploadOk: "%s — %s개의 점을 그렸습니다.",
+    uploadSkipped: "숫자가 아닌 %s개 행을 건너뛰었습니다.",
+    uploadPoints: "%s개 점",
+    uploadTooFew: "상관계수를 계산하려면 숫자 행이 최소 3개 필요합니다.",
+    uploadTooBig: "파일이 5 MB보다 큽니다. 더 작은 샘플로 시도해 보세요.",
+    uploadParseErr: "CSV로 해석할 수 없었습니다.",
+    uploadReadErr: "파일을 읽지 못했습니다."
   },
 
   /* ---------------------------------------------------------- Bahasa Melayu */
@@ -951,6 +1021,20 @@ var LLL_CORR_STRINGS = {
     causeConfT: "Faktor ketiga mungkin menggerakkan kedua-duanya",
     causeConfB: "Jualan aiskrim dan kes lemas meningkat bersama. Bukan satu menyebabkan yang lain — cuaca panas menyebabkan kedua-duanya.",
     causeRevT: "Arah sebabnya mungkin terbalik",
-    causeRevB: "Orang yang cergas bersenam lebih banyak. Adakah senaman menjadikan mereka cergas, atau kecergasan menjadikan senaman mudah? Korelasi sahaja tidak dapat menjawab."
+    causeRevB: "Orang yang cergas bersenam lebih banyak. Adakah senaman menjadikan mereka cergas, atau kecergasan menjadikan senaman mudah? Korelasi sahaja tidak dapat menjawab.",
+
+    /* ---- CSV upload ---- */
+    uploadTitle: "Cuba dengan data anda",
+    uploadLede: "Muat naik CSV dua lajur berangka — lajur pertama sebagai x, kedua sebagai y. Kami akan plotkan dan kira r.",
+    uploadBtn: "Pilih fail CSV",
+    uploadIdle: "Belum ada fail dimuat.",
+    uploadReading: "Membaca %s…",
+    uploadOk: "%s — %s titik dipaparkan.",
+    uploadSkipped: "%s baris bukan angka telah dilangkau.",
+    uploadPoints: "%s titik",
+    uploadTooFew: "Perlu sekurang-kurangnya 3 baris berangka untuk mengira korelasi.",
+    uploadTooBig: "Fail melebihi 5 MB. Cuba sampel yang lebih kecil.",
+    uploadParseErr: "Tidak dapat menghurai fail itu sebagai CSV.",
+    uploadReadErr: "Tidak dapat membaca fail itu."
   }
 };

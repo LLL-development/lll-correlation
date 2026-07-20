@@ -605,3 +605,179 @@
   updateHud();
   newRound();
 })();
+
+/* ============================================================
+   Custom CSV upload
+   Parses a two-column CSV, plots it with the same pipeline the game
+   uses, and shows the computed r. Kept in its own IIFE so the game
+   logic above is untouched.
+   ============================================================ */
+(function () {
+  "use strict";
+  var C = window.LLL_CORR;
+  var $ = function (id) { return document.getElementById(id); };
+  var file = $("csvFile"), status = $("csvStatus"), card = $("csvCard");
+  var plot = $("csvPlot"), meta = $("csvMeta");
+  if (!file) return;
+
+  function t(k) { return LLL_I18N.t(k); }
+  function tfa(k, arr) {
+    var s = String(LLL_I18N.t(k) || "");
+    (arr || []).forEach(function (v) { s = s.replace("%s", v); });
+    return s;
+  }
+  function setStatus(msg, cls) {
+    status.textContent = msg;
+    status.classList.remove("err", "ok");
+    if (cls) status.classList.add(cls);
+  }
+
+  /* Real-world CSVs need at least: Excel's \r\n line endings, a header row,
+     quoted fields ("1,234"), and trailing blank lines. Split-by-comma
+     handles none of these. This handles all four in ~30 lines. */
+  function parseCsv(text) {
+    var rows = [], cur = [], field = "", inQuote = false, i, ch;
+    for (i = 0; i < text.length; i++) {
+      ch = text.charAt(i);
+      if (inQuote) {
+        if (ch === '"') {
+          if (text.charAt(i + 1) === '"') { field += '"'; i++; }
+          else inQuote = false;
+        } else field += ch;
+        continue;
+      }
+      if (ch === '"') { inQuote = true; continue; }
+      if (ch === ",") { cur.push(field); field = ""; continue; }
+      if (ch === "\n" || ch === "\r") {
+        if (ch === "\r" && text.charAt(i + 1) === "\n") i++;
+        cur.push(field); field = "";
+        /* Skip blank lines rather than emitting empty rows. */
+        if (cur.length > 1 || (cur.length === 1 && cur[0] !== "")) rows.push(cur);
+        cur = [];
+        continue;
+      }
+      field += ch;
+    }
+    if (field !== "" || cur.length) { cur.push(field); rows.push(cur); }
+    return rows;
+  }
+
+  /* Turn parsed rows into { xs, ys }. Detects a header row (first row where
+     no two adjacent cells parse as numbers), and picks the pair of columns
+     that actually holds the numeric data. A label column ("Smith, J.",1,2)
+     is common enough that assuming columns 0 and 1 is a real mistake. */
+  function toNumericPairs(rows) {
+    if (!rows.length) return { xs: [], ys: [], skipped: 0, hadHeader: false, cols: [0, 1] };
+
+    /* Which two columns hold the numbers? Score every adjacent pair by how
+       often both cells across all rows parse as finite numbers. */
+    var width = 0;
+    for (var r = 0; r < rows.length; r++) width = Math.max(width, rows[r].length);
+    if (width < 2) return { xs: [], ys: [], skipped: rows.length, hadHeader: false, cols: [0, 1] };
+    var bestScore = -1, bestPair = [0, 1];
+    for (var a = 0; a < width - 1; a++) {
+      var b = a + 1;
+      var score = 0;
+      for (var i = 0; i < rows.length; i++) {
+        var x = parseFloat(rows[i][a]), y = parseFloat(rows[i][b]);
+        if (isFinite(x) && isFinite(y)) score++;
+      }
+      if (score > bestScore) { bestScore = score; bestPair = [a, b]; }
+    }
+    var ca = bestPair[0], cb = bestPair[1];
+
+    /* Header row: the first row where the chosen pair isn't both numeric. */
+    var start = 0, hadHeader = false;
+    if (rows.length) {
+      var f0 = parseFloat(rows[0][ca]), f1 = parseFloat(rows[0][cb]);
+      if (!isFinite(f0) || !isFinite(f1)) { start = 1; hadHeader = true; }
+    }
+
+    var xs = [], ys = [], skipped = 0;
+    for (var j = start; j < rows.length; j++) {
+      var row = rows[j];
+      if (row.length <= cb) { skipped++; continue; }
+      var xv = parseFloat(row[ca]), yv = parseFloat(row[cb]);
+      if (!isFinite(xv) || !isFinite(yv)) { skipped++; continue; }
+      xs.push(xv); ys.push(yv);
+    }
+    return { xs: xs, ys: ys, skipped: skipped, hadHeader: hadHeader, cols: bestPair };
+  }
+
+  var BOX = { x0: 30, x1: 302, y0: 208, y1: 20 };
+
+  function render(data) {
+    var r = C.pearson(data.xs, data.ys);
+    var sx = C.scaler(data.xs, BOX.x0, BOX.x1), sy = C.scaler(data.ys, BOX.y0, BOX.y1);
+    var pts = data.xs.map(function (x, i) { return [sx(x), sy(data.ys[i])]; });
+    var svg = C.chrome(BOX) + C.fitSvg(BOX, data, sx, sy, r) + C.dots(pts);
+    plot.innerHTML = svg;
+    plot.style.setProperty("--dotc", C.colorFor(r));
+    var f = plot.querySelector(".fit"); if (f) f.classList.add("show");
+    meta.innerHTML =
+      '<span>' + tfa("uploadPoints", [data.xs.length]) + '</span>' +
+      '<span>r = <span class="r">' + C.fmt(r) + '</span> \u00b7 ' + t(C.bucket(r)) + '</span>';
+    card.classList.remove("hidden");
+  }
+
+  function hidePlot() {
+    /* Blank the SVG too, so a subsequent test/assertion (or a user peeking
+       at DevTools) can never see stale content from a previous upload. */
+    plot.innerHTML = "";
+    meta.innerHTML = "";
+    card.classList.add("hidden");
+  }
+
+  file.addEventListener("change", function () {
+    var f = file.files && file.files[0];
+    if (!f) return;
+    /* 5 MB is comfortably larger than any hand-rolled dataset and small
+       enough that FileReader/parseCsv won't hang the tab. */
+    if (f.size > 5 * 1024 * 1024) {
+      setStatus(t("uploadTooBig"), "err");
+      hidePlot();
+      return;
+    }
+    setStatus(tfa("uploadReading", [f.name]));
+
+    var reader = new FileReader();
+    reader.onerror = function () { setStatus(t("uploadReadErr"), "err"); hidePlot(); };
+    reader.onload = function () {
+      try {
+        var rows = parseCsv(String(reader.result || ""));
+        var pairs = toNumericPairs(rows);
+
+        /* Log the structured array so it's inspectable from DevTools and
+           available for any future pipeline that wants raw pairs. */
+        console.log("[lll-correlation] parsed CSV:", { rows: rows, pairs: pairs });
+
+        if (pairs.xs.length < 3) {
+          setStatus(t("uploadTooFew"), "err");
+          hidePlot();
+          return;
+        }
+        render(pairs);
+        var msg = tfa("uploadOk", [f.name, pairs.xs.length]);
+        if (pairs.skipped) msg += " " + tfa("uploadSkipped", [pairs.skipped]);
+        setStatus(msg, "ok");
+      } catch (err) {
+        console.error("[lll-correlation] CSV parse failed:", err);
+        setStatus(t("uploadParseErr"), "err");
+        hidePlot();
+      }
+    };
+    reader.readAsText(f);
+  });
+})();
+
+/* ============================================================
+   Service worker registration
+   Runs after everything else so a broken SW can never block the page.
+   ============================================================ */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function (err) {
+      console.warn("[lll-correlation] service worker registration failed:", err);
+    });
+  });
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Guess the Correlation",
+  "short_name": "Correlation",
+  "description": "A statistical intuition trainer: guess the correlation coefficient of a scatter plot.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#faf8f2",
+  "theme_color": "#222220",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "shared/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
