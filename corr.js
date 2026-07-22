@@ -375,9 +375,128 @@
   function descKey(r) { return Math.abs(r) < 0.1 ? "descNone" : (r > 0 ? "descPos" : "descNeg"); }
   function reduced() { return !!(global.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); }
 
+  /* ============================================================
+     Advanced metrics: Spearman's rank correlation, R-squared, and a
+     two-tailed p-value for Pearson's r.
+
+     Spearman and R-squared are simple compositions of what's already
+     above. The p-value is the one worth real care: it needs the CDF of
+     Student's t-distribution, which needs the regularized incomplete beta
+     function - a piece of numerical code with no "looks about right" tier,
+     since a subtly wrong implementation returns a plausible-looking wrong
+     number instead of failing loudly. Implemented from Numerical Recipes'
+     continued-fraction method and checked against scipy.stats to 1e-9
+     (see corr_stats_test.js).
+     ============================================================ */
+
+  /* Average rank for ties (the standard convention: a 3-way tie for ranks
+     2,3,4 gets rank 3 for every tied value), needed because Spearman
+     correlation is defined as Pearson correlation of the ranks. */
+  function rank(arr) {
+    var n = arr.length;
+    var idx = arr.map(function (v, i) { return i; });
+    idx.sort(function (a, b) { return arr[a] - arr[b]; });
+    var ranks = new Array(n);
+    var i = 0;
+    while (i < n) {
+      var j = i;
+      while (j + 1 < n && arr[idx[j + 1]] === arr[idx[i]]) j++;
+      var avgRank = (i + j) / 2 + 1; // 1-indexed, averaged across the tie run
+      for (var k = i; k <= j; k++) ranks[idx[k]] = avgRank;
+      i = j + 1;
+    }
+    return ranks;
+  }
+
+  function spearman(xs, ys) { return pearson(rank(xs), rank(ys)); }
+
+  /* Coefficient of determination: the share of variance in y "explained"
+     by the linear fit on x. Just r^2, but named so callers don't have to
+     remember that or re-derive it. */
+  function rSquared(r) { return r * r; }
+
+  /* ---- log-gamma (Lanczos approximation, g=7, n=9) ----
+     Needed to build the Beta function B(a,b) = exp(lgamma(a)+lgamma(b)-lgamma(a+b))
+     without overflowing for the a,b values a t-test produces. */
+  var LANCZOS_G = 7;
+  var LANCZOS_COEF = [
+    0.99999999999980993, 676.5203681218851, -1259.1392167224028,
+    771.32342877765313, -176.61502916214059, 12.507343278686905,
+    -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7
+  ];
+  function logGamma(x) {
+    if (x < 0.5) {
+      // reflection formula, so we only ever evaluate the series for x >= 0.5
+      return Math.log(Math.PI / Math.sin(Math.PI * x)) - logGamma(1 - x);
+    }
+    x -= 1;
+    var a = LANCZOS_COEF[0];
+    var t = x + LANCZOS_G + 0.5;
+    for (var i = 1; i < LANCZOS_G + 2; i++) a += LANCZOS_COEF[i] / (x + i);
+    return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+  }
+
+  /* ---- regularized incomplete beta function I_x(a,b) ----
+     Continued fraction from Numerical Recipes (6.4.5-6.4.6), the standard
+     way to evaluate this without a full hypergeometric series. Swaps to
+     the complementary side when x is past the point where the continued
+     fraction converges quickly, which is required for it to converge in a
+     bounded number of steps across the whole (0,1) domain. */
+  function betacf(x, a, b) {
+    var MAXIT = 200, EPS = 3e-16, FPMIN = 1e-300;
+    var qab = a + b, qap = a + 1, qam = a - 1;
+    var c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < FPMIN) d = FPMIN;
+    d = 1 / d;
+    var h = d;
+    for (var m = 1; m <= MAXIT; m++) {
+      var m2 = 2 * m;
+      var aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) d = FPMIN;
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) c = FPMIN;
+      d = 1 / d;
+      h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) d = FPMIN;
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) c = FPMIN;
+      d = 1 / d;
+      var del = d * c;
+      h *= del;
+      if (Math.abs(del - 1) < EPS) break;
+    }
+    return h;
+  }
+  function regIncBeta(x, a, b) {
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    var bt = Math.exp(logGamma(a + b) - logGamma(a) - logGamma(b) +
+                       a * Math.log(x) + b * Math.log(1 - x));
+    // the continued fraction converges fastest below the midpoint;
+    // past it, evaluate the complementary function instead
+    if (x < (a + 1) / (a + b + 2)) return bt * betacf(x, a, b) / a;
+    return 1 - bt * betacf(1 - x, b, a) / b;
+  }
+
+  /* Two-tailed p-value for a Pearson correlation r measured from n pairs,
+     via the standard t-transform: t = r*sqrt((n-2)/(1-r^2)), df = n-2.
+     Returns null when n is too small for the test to mean anything (df<=0)
+     or when the correlation is exactly +-1, where t is infinite and the
+     p-value is 0 by definition, not "the test breaks". */
+  function pValue(r, n) {
+    var df = n - 2;
+    if (df <= 0) return null;
+    r = Math.max(-1, Math.min(1, r));
+    if (Math.abs(r) >= 1) return 0;
+    var t = r * Math.sqrt(df / (1 - r * r));
+    var x = df / (df + t * t);
+    var p = regIncBeta(x, df / 2, 0.5);
+    return Math.max(0, Math.min(1, p));
+  }
+
   global.LLL_CORR = {
     mulberry32: mulberry32, hashStr: hashStr, gauss: gauss,
     avg: avg, variance: variance, pearson: pearson,
+    rank: rank, spearman: spearman, rSquared: rSquared, pValue: pValue,
     makeNormal: makeNormal, makeTrap: makeTrap, makeLine: makeLine, seekSeed: seekSeed,
     morphBase: morphBase, morphAt: morphAt, TRAP_KINDS: TRAP_KINDS,
     cssVar: cssVar, refreshPalette: refreshPalette, colorFor: colorFor, watchTheme: watchTheme,

@@ -164,6 +164,38 @@ mid-keystroke.
 The `±` button is not decoration: **iOS shows no minus key on a decimal keypad**, so on a
 touch device it is the only way to type a negative r.
 
+## Upload your own CSV
+
+Below Calibration, drop a two-column CSV — or click to browse — and it plots through the
+same pipeline as every other plot in the tool, with the metrics below computed live.
+
+The parser handles what real CSVs actually contain: a header row (detected and dropped by
+checking which two columns actually parse as numbers), Windows/Excel `\r\n` line endings,
+quoted fields with embedded commas (`"Smith, J.",1,2`), trailing blank lines, and an extra
+label column (it scores every adjacent column pair by how often both cells parse as numbers,
+rather than assuming columns 0 and 1). A stray drop anywhere else on the page is caught at
+the document level so it can't navigate the tab away to the raw file, which is the browser's
+default behaviour otherwise.
+
+**Advanced metrics.** Every upload also computes:
+
+| Metric | What it tells you |
+|--------|--------------------|
+| Pearson r | The same linear correlation the game scores — how close to a straight line |
+| Spearman ρ | Correlation of the *ranks* instead of the raw values — catches any consistently rising or falling relationship, linear or not |
+| R² | Share of variance in y "explained" by the linear fit — just r², named so nobody has to remember that |
+| p-value | How likely this r would arise by chance alone, via the standard t-distribution significance test, with a plain-language "significant / not significant" badge at the conventional p < 0.05 line |
+
+When Pearson and Spearman disagree by more than 0.15, a hint appears: that gap almost always
+means the real relationship is monotonic but not a straight line — the CSV-upload version of
+exactly what the game's trap rounds are teaching.
+
+The p-value needs the regularized incomplete beta function to evaluate the t-distribution,
+which is the kind of numerical code that returns a plausible-looking wrong answer instead of
+failing loudly if it's subtly off. It's checked against `scipy.stats.pearsonr` across 88
+generated datasets — different sample sizes, tie configurations, near-perfect correlations,
+and the minimum valid sample size — matching scipy to within 1e-9 in every case.
+
 ## Running locally
 
 No build step and no dependencies — plain HTML, CSS, and JavaScript.
