@@ -595,6 +595,13 @@
       updateDiffHint();
       renderCalib();
       if (done && mode !== "reverse") showResult();
+      /* shared/i18n.js only has one onChange slot, and it's claimed here.
+         The CSV upload panel lives in a separate IIFE further down this
+         file and needs to relocalize its own result card on a language
+         switch too, so it registers itself on this hook rather than this
+         file calling LLL_I18N.init a second time (which would duplicate
+         the language switcher UI). */
+      if (window.LLL_CORR_ON_LANG) window.LLL_CORR_ON_LANG();
     }
   });
 
@@ -617,8 +624,10 @@
   var C = window.LLL_CORR;
   var $ = function (id) { return document.getElementById(id); };
   var file = $("csvFile"), status = $("csvStatus"), card = $("csvCard");
-  var plot = $("csvPlot"), meta = $("csvMeta");
+  var plot = $("csvPlot"), meta = $("csvMeta"), metrics = $("csvMetrics"), hint = $("csvHint");
   if (!file) return;
+  var dropzone = $("dropzone");
+  if (!dropzone) return;
 
   function t(k) { return LLL_I18N.t(k); }
   function tfa(k, arr) {
@@ -706,8 +715,15 @@
 
   var BOX = { x0: 30, x1: 302, y0: 208, y1: 20 };
 
+  var lastData = null; // re-render target for a language switch (see hook below)
+
   function render(data) {
+    lastData = data;
     var r = C.pearson(data.xs, data.ys);
+    var rho = C.spearman(data.xs, data.ys);
+    var r2 = C.rSquared(r);
+    var p = C.pValue(r, data.xs.length);
+
     var sx = C.scaler(data.xs, BOX.x0, BOX.x1), sy = C.scaler(data.ys, BOX.y0, BOX.y1);
     var pts = data.xs.map(function (x, i) { return [sx(x), sy(data.ys[i])]; });
     var svg = C.chrome(BOX) + C.fitSvg(BOX, data, sx, sy, r) + C.dots(pts);
@@ -717,20 +733,56 @@
     meta.innerHTML =
       '<span>' + tfa("uploadPoints", [data.xs.length]) + '</span>' +
       '<span>r = <span class="r">' + C.fmt(r) + '</span> \u00b7 ' + t(C.bucket(r)) + '</span>';
+
+    /* p < 0.05 is the conventional (if debatable) line for "statistically
+       significant" - shown as a plain-language label, not just the raw
+       number, since a bare p-value means little without that context. */
+    var sig = p === null ? "" :
+      '<span class="sig ' + (p < 0.05 ? "yes" : "no") + '">' +
+      t(p < 0.05 ? "metricSig" : "metricNotSig") + '</span>';
+
+    metrics.innerHTML =
+      '<div class="metric"><div class="mk">' + t("metricPearson") + '</div><div class="mv">' + C.fmt(r) + '</div></div>' +
+      '<div class="metric"><div class="mk">' + t("metricSpearman") + '</div><div class="mv">' + C.fmt(rho) + '</div></div>' +
+      '<div class="metric"><div class="mk">' + t("metricRSq") + '</div><div class="mv">' + r2.toFixed(3) + '</div></div>' +
+      '<div class="metric"><div class="mk">' + t("metricPValue") + '</div><div class="mv">' +
+        (p === null ? "\u2014" : (p < 0.001 ? "< 0.001" : p.toFixed(3))) + sig + '</div></div>';
+
+    /* Pearson only sees the linear component of a relationship; Spearman
+       sees any consistently increasing/decreasing trend, linear or not.
+       A meaningful gap between them is itself informative - it is the
+       CSV-upload version of exactly what the trap rounds teach in the
+       game (see learn.html#limits once Day 3 lands the explanation). */
+    var diverges = Math.abs(r - rho) >= 0.15;
+    hint.innerHTML = diverges ? '<p class="tipbox" style="margin-top:10px;">' + t("metricDivergeHint") + '</p>' : "";
+
     card.classList.remove("hidden");
   }
 
   function hidePlot() {
-    /* Blank the SVG too, so a subsequent test/assertion (or a user peeking
-       at DevTools) can never see stale content from a previous upload. */
+    /* Blank everything, not just hide the container, so a subsequent
+       test/assertion (or a user peeking at DevTools) can never see stale
+       content from a previous upload. */
+    lastData = null;
     plot.innerHTML = "";
     meta.innerHTML = "";
+    metrics.innerHTML = "";
+    hint.innerHTML = "";
     card.classList.add("hidden");
   }
 
-  file.addEventListener("change", function () {
-    var f = file.files && file.files[0];
+  /* Shared by both entry points (click-to-browse and drag-drop) so there is
+     exactly one place that validates a file and turns it into a plot. */
+  function processFile(f) {
     if (!f) return;
+    if (!/\.csv$/i.test(f.name) && f.type && f.type !== "text/csv" && f.type !== "") {
+      /* Only reject on a confident non-CSV type; many OSes report an empty
+         type for .csv, so an empty type is treated as "unknown, allow it"
+         rather than rejected. */
+      setStatus(t("uploadNotCsv"), "err");
+      hidePlot();
+      return;
+    }
     /* 5 MB is comfortably larger than any hand-rolled dataset and small
        enough that FileReader/parseCsv won't hang the tab. */
     if (f.size > 5 * 1024 * 1024) {
@@ -767,7 +819,55 @@
       }
     };
     reader.readAsText(f);
+  }
+
+  file.addEventListener("change", function () {
+    processFile(file.files && file.files[0]);
   });
+
+  /* ---------- drag and drop ----------
+     The zone is a <label for="csvFile">, so a plain click already opens the
+     file dialog via native label/input association - no JS needed for that
+     path. Only three things need wiring by hand: the drag visuals, the
+     actual drop, and Enter/Space activation (a <label> isn't a native
+     interactive element, so browsers don't synthesize a click from the
+     keyboard the way they do for a real <button>). */
+  var dragDepth = 0; // dragenter/dragleave fire on every child element too;
+                     // a plain counter is the standard fix for the flicker
+                     // that a naive enter/leave toggle produces.
+
+  function activate(e) { dragDepth++; dropzone.classList.add("drag-active"); }
+  function deactivate(e) { dragDepth = Math.max(0, dragDepth - 1); if (dragDepth === 0) dropzone.classList.remove("drag-active"); }
+
+  dropzone.addEventListener("dragenter", function (e) { e.preventDefault(); activate(e); });
+  dropzone.addEventListener("dragover", function (e) { e.preventDefault(); }); // required for drop to fire at all
+  dropzone.addEventListener("dragleave", function (e) { e.preventDefault(); deactivate(e); });
+  dropzone.addEventListener("drop", function (e) {
+    e.preventDefault();
+    dragDepth = 0;
+    dropzone.classList.remove("drag-active");
+    var files = e.dataTransfer && e.dataTransfer.files;
+    if (files && files.length) processFile(files[0]);
+  });
+  dropzone.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    file.click();
+  });
+
+  /* Safety net: if a file is dragged and mis-dropped anywhere else on the
+     page, the browser's default behaviour is to navigate the whole tab to
+     that file. Swallowing dragover/drop at the document level prevents
+     that without affecting the dropzone's own handlers above (which run
+     first, on the more specific target, and already called preventDefault
+     there). */
+  document.addEventListener("dragover", function (e) { e.preventDefault(); });
+  document.addEventListener("drop", function (e) { e.preventDefault(); });
+
+  /* Relocalize the result card's labels and hint text (not the numbers -
+     those don't change) when the language switches. See the matching
+     comment on the game's LLL_I18N.init call above. */
+  window.LLL_CORR_ON_LANG = function () { if (lastData) render(lastData); };
 })();
 
 /* ============================================================

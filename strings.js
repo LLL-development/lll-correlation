@@ -175,7 +175,22 @@ var LLL_CORR_STRINGS = {
     uploadTooFew: "相関を計算するには、数値の行が少なくとも 3 つ必要です。",
     uploadTooBig: "ファイルが 5 MB を超えています。もう少し小さいものを試してください。",
     uploadParseErr: "CSV として読み取れませんでした。",
-    uploadReadErr: "ファイルを読み込めませんでした。"
+    uploadReadErr: "ファイルを読み込めませんでした。",
+
+    /* ---- drag-and-drop upload ---- */
+    dropzoneAria: "ここに CSV ファイルをドロップ、または Enter でファイルを選択",
+    dropzoneDrop: "ここに CSV ファイルをドロップ",
+    dropzoneOr: "またはクリックして選択",
+    uploadNotCsv: "CSV ファイルではないようです。",
+
+    /* ---- advanced metrics ---- */
+    metricPearson: "ピアソン r",
+    metricSpearman: "スピアマン ρ",
+    metricRSq: "決定係数 R²",
+    metricPValue: "p値",
+    metricSig: "有意",
+    metricNotSig: "有意でない",
+    metricDivergeHint: "ピアソンとスピアマンの値が大きくずれています。ピアソンは直線の関係しか見ませんが、スピアマンは増加・減少が一貫していればどんな関係でも捉えます。このズレは、実際の関係が直線ではないことを示している場合が多いです — 上の散布図を見てみましょう。"
   },
 
   /* ---------------------------------------------------------- English */
@@ -347,7 +362,22 @@ var LLL_CORR_STRINGS = {
     uploadTooFew: "Need at least 3 numeric rows to compute a correlation.",
     uploadTooBig: "File is larger than 5 MB. Try a smaller sample.",
     uploadParseErr: "Couldn't parse that as CSV.",
-    uploadReadErr: "Couldn't read the file."
+    uploadReadErr: "Couldn't read the file.",
+
+    /* ---- drag-and-drop upload ---- */
+    dropzoneAria: "Drop a CSV file here, or press Enter to browse",
+    dropzoneDrop: "Drop a CSV file here",
+    dropzoneOr: "or click to browse",
+    uploadNotCsv: "That doesn't look like a CSV file.",
+
+    /* ---- advanced metrics ---- */
+    metricPearson: "Pearson r",
+    metricSpearman: "Spearman ρ",
+    metricRSq: "R²",
+    metricPValue: "p-value",
+    metricSig: "significant",
+    metricNotSig: "not significant",
+    metricDivergeHint: "Pearson and Spearman disagree by a fair amount here. Pearson only sees a straight-line relationship; Spearman sees any relationship that consistently rises or falls. That gap usually means the real pattern isn't a straight line — look at the plot above."
   },
 
   /* ---------------------------------------------------------- 简体中文 */
@@ -519,7 +549,22 @@ var LLL_CORR_STRINGS = {
     uploadTooFew: "至少需要 3 行数值才能计算相关系数。",
     uploadTooBig: "文件超过 5 MB，请换一个更小的样本。",
     uploadParseErr: "无法把这个文件解析为 CSV。",
-    uploadReadErr: "无法读取该文件。"
+    uploadReadErr: "无法读取该文件。",
+
+    /* ---- drag-and-drop upload ---- */
+    dropzoneAria: "把 CSV 文件拖到这里，或按 Enter 浏览文件",
+    dropzoneDrop: "把 CSV 文件拖到这里",
+    dropzoneOr: "或点击选择文件",
+    uploadNotCsv: "这似乎不是 CSV 文件。",
+
+    /* ---- advanced metrics ---- */
+    metricPearson: "皮尔逊 r",
+    metricSpearman: "斯皮尔曼 ρ",
+    metricRSq: "决定系数 R²",
+    metricPValue: "p 值",
+    metricSig: "显著",
+    metricNotSig: "不显著",
+    metricDivergeHint: "皮尔逊和斯皮尔曼的结果差异较大。皮尔逊只能看到直线关系，而斯皮尔曼能捕捉任何持续上升或下降的关系。这种差异通常说明真实的关系并非直线——请看看上面的散点图。"
   },
 
   /* ---------------------------------------------------------- 繁體中文 */
@@ -691,7 +736,22 @@ var LLL_CORR_STRINGS = {
     uploadTooFew: "至少需要 3 列數值才能計算相關係數。",
     uploadTooBig: "檔案超過 5 MB，請換一個更小的樣本。",
     uploadParseErr: "無法把這個檔案解析為 CSV。",
-    uploadReadErr: "無法讀取該檔案。"
+    uploadReadErr: "無法讀取該檔案。",
+
+    /* ---- drag-and-drop upload ---- */
+    dropzoneAria: "把 CSV 檔案拖到這裡，或按 Enter 瀏覽檔案",
+    dropzoneDrop: "把 CSV 檔案拖到這裡",
+    dropzoneOr: "或點擊選擇檔案",
+    uploadNotCsv: "這似乎不是 CSV 檔案。",
+
+    /* ---- advanced metrics ---- */
+    metricPearson: "皮爾遜 r",
+    metricSpearman: "斯皮爾曼 ρ",
+    metricRSq: "決定係數 R²",
+    metricPValue: "p 值",
+    metricSig: "顯著",
+    metricNotSig: "不顯著",
+    metricDivergeHint: "皮爾遜和斯皮爾曼的結果差異較大。皮爾遜只能看到直線關係，而斯皮爾曼能捕捉任何持續上升或下降的關係。這種差異通常說明真實的關係並非直線——請看看上面的散點圖。"
   },
 
   /* ---------------------------------------------------------- 한국어 */
@@ -863,7 +923,22 @@ var LLL_CORR_STRINGS = {
     uploadTooFew: "상관계수를 계산하려면 숫자 행이 최소 3개 필요합니다.",
     uploadTooBig: "파일이 5 MB보다 큽니다. 더 작은 샘플로 시도해 보세요.",
     uploadParseErr: "CSV로 해석할 수 없었습니다.",
-    uploadReadErr: "파일을 읽지 못했습니다."
+    uploadReadErr: "파일을 읽지 못했습니다.",
+
+    /* ---- drag-and-drop upload ---- */
+    dropzoneAria: "여기에 CSV 파일을 드롭하거나 Enter를 눌러 찾아보세요",
+    dropzoneDrop: "여기에 CSV 파일을 드롭하세요",
+    dropzoneOr: "또는 클릭해서 찾아보기",
+    uploadNotCsv: "CSV 파일이 아닌 것 같아요.",
+
+    /* ---- advanced metrics ---- */
+    metricPearson: "피어슨 r",
+    metricSpearman: "스피어만 ρ",
+    metricRSq: "결정계수 R²",
+    metricPValue: "p값",
+    metricSig: "유의함",
+    metricNotSig: "유의하지 않음",
+    metricDivergeHint: "피어슨과 스피어만 값이 꽤 차이가 납니다. 피어슨은 직선 관계만 보지만, 스피어만은 꾸준히 증가하거나 감소하는 관계라면 무엇이든 포착합니다. 이런 차이는 대개 실제 관계가 직선이 아니라는 뜻이에요 — 위 그래프를 확인해 보세요."
   },
 
   /* ---------------------------------------------------------- Bahasa Melayu */
@@ -1035,6 +1110,21 @@ var LLL_CORR_STRINGS = {
     uploadTooFew: "Perlu sekurang-kurangnya 3 baris berangka untuk mengira korelasi.",
     uploadTooBig: "Fail melebihi 5 MB. Cuba sampel yang lebih kecil.",
     uploadParseErr: "Tidak dapat menghurai fail itu sebagai CSV.",
-    uploadReadErr: "Tidak dapat membaca fail itu."
+    uploadReadErr: "Tidak dapat membaca fail itu.",
+
+    /* ---- drag-and-drop upload ---- */
+    dropzoneAria: "Lepaskan fail CSV di sini, atau tekan Enter untuk semak imbas",
+    dropzoneDrop: "Lepaskan fail CSV di sini",
+    dropzoneOr: "atau klik untuk semak imbas",
+    uploadNotCsv: "Ini nampaknya bukan fail CSV.",
+
+    /* ---- advanced metrics ---- */
+    metricPearson: "Pearson r",
+    metricSpearman: "Spearman ρ",
+    metricRSq: "R²",
+    metricPValue: "nilai-p",
+    metricSig: "signifikan",
+    metricNotSig: "tidak signifikan",
+    metricDivergeHint: "Pearson dan Spearman tidak sepadan di sini. Pearson hanya nampak hubungan garis lurus; Spearman menangkap sebarang hubungan yang sentiasa meningkat atau menurun. Jurang ini biasanya bermaksud corak sebenar bukan garis lurus — lihat plot di atas."
   }
 };
