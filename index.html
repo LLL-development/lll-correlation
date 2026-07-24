@@ -102,22 +102,40 @@
     padding:16px; display:flex; flex-direction:column; gap:12px; }
   .upload-lede { font-size:13px; line-height:1.6; color:var(--muted); margin:0; }
 
-  .dropzone { display:flex; flex-direction:column; align-items:center; gap:8px;
+  /* Deliberately NOT called .dropzone: shared/brand.css already defines a
+     .dropzone component (a centred, max-width:440px full-page drop target)
+     and that max-width leaks through onto this one, leaving it narrower
+     than everything else in the card. shared/ is synced across the LLL
+     tools, so this namespaces around it instead of overriding it. */
+  .csv-drop { display:flex; flex-direction:column; align-items:center; gap:8px;
     padding:22px 16px; border:2px dashed var(--border); border-radius:12px;
     background:var(--bg); cursor:pointer; text-align:center;
     transition:border-color .15s ease, background .15s ease; }
-  .dropzone:hover { border-color:var(--muted); }
-  .dropzone:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  .csv-drop:hover { border-color:var(--muted); }
+  .csv-drop:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
   /* Toggled by JS on dragenter/dragover, so the drop target is unmistakable
      the moment a file crosses into it - the whole point of a drop zone
      over a plain button is that feedback. */
-  .dropzone.drag-active { border-color:var(--accent); border-style:solid;
+  .csv-drop.drag-active { border-color:var(--accent); border-style:solid;
     background:var(--accent-tint); }
   .dz-icon { width:26px; height:26px; color:var(--muted); transition:color .15s ease; }
-  .dropzone.drag-active .dz-icon, .dropzone:hover .dz-icon { color:var(--accent); }
+  .csv-drop.drag-active .dz-icon, .csv-drop:hover .dz-icon { color:var(--accent); }
   .dz-text { display:flex; flex-direction:column; gap:2px; }
   .dz-text b { font-size:13.5px; font-weight:600; color:var(--ink); }
   .dz-text span { font-size:12px; color:var(--muted); }
+
+  /* Status on the left, action on the right, sharing one baseline row.
+     Keeps the block from ending on an orphaned left-aligned button and
+     saves a row of vertical space. */
+  .upload-foot { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .upload-foot .upload-status { flex:1; min-width:0; }
+  .btn.compact { flex:none; padding:7px 14px; font-size:12.5px; }
+  /* Below the breakpoint there isn't room for both on one line without the
+     status text wrapping awkwardly around a floated button, so stack them. */
+  @media (max-width:460px) {
+    .upload-foot { flex-direction:column; align-items:stretch; }
+    .btn.compact { width:100%; }
+  }
 
   .upload-status { font-size:12.5px; line-height:1.6; margin:0; color:var(--muted);
     font-variant-numeric:tabular-nums; }
@@ -229,6 +247,7 @@
         <div class="trap hidden" id="trapBox">
           <div class="tt" id="trapTag"></div>
           <p id="trapWhat"></p>
+          <div class="trapcmp hidden" id="trapCmp"></div>
           <p class="tlink"><a href="learn.html#limits" id="trapLink"></a></p>
         </div>
         <button class="btn" id="nextBtn" data-i18n="nextBtn" style="width:100%; margin-top:14px;">Next</button>
@@ -267,7 +286,7 @@
       <h2 data-i18n="uploadTitle">Try your own data</h2>
       <div class="upload">
         <p class="upload-lede" data-i18n="uploadLede">Upload a CSV with two numeric columns. We'll plot it and compute r.</p>
-        <label class="dropzone" id="dropzone" for="csvFile" tabindex="0" role="button" data-i18n-aria="dropzoneAria">
+        <label class="csv-drop" id="dropzone" for="csvFile" tabindex="0" role="button" data-i18n-aria="dropzoneAria">
           <svg class="dz-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path d="M12 15V4M12 4L7.5 8.5M12 4l4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -278,7 +297,10 @@
           </span>
           <input type="file" id="csvFile" accept=".csv,text/csv" hidden>
         </label>
-        <p class="upload-status" id="csvStatus" data-i18n="uploadIdle">No file loaded.</p>
+        <div class="upload-foot">
+          <p class="upload-status" id="csvStatus" data-i18n="uploadIdle">No file loaded.</p>
+          <button class="btn secondary compact hidden" id="csvExport" data-i18n="exportPng">Download PNG</button>
+        </div>
         <div class="plotcard hidden" id="csvCard">
           <svg class="plot" id="csvPlot" viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg"></svg>
           <div class="csv-meta" id="csvMeta"></div>

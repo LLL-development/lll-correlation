@@ -164,6 +164,40 @@ mid-keystroke.
 The `±` button is not decoration: **iOS shows no minus key on a decimal keypad**, so on a
 touch device it is the only way to type a negative r.
 
+## What the Learn page teaches about these metrics
+
+The **Beyond Pearson's r** section explains the two extra coefficients with live,
+measured examples rather than prose alone — every number on that page is computed from the
+plotted points at runtime, so a caption can't drift away from its picture.
+
+**Spearman** is shown through two examples chosen because they disagree in *opposite*
+directions, which is the whole lesson:
+
+| Example | Pearson | Spearman | What it shows |
+|---|---|---|---|
+| A curve that always rises (`y = 1.9^x`) | ≈ +0.77 | +1.00 | Every step goes up, so the ranks are a perfect ladder — but the curve steepens, so it's a poor *straight* line. Spearman is right here |
+| One far-away point (the game's outlier trap) | ≈ +0.83 | ≈ +0.07 | A single distant point creates the whole correlation. Ranking flattens it to "just the largest one", so Spearman correctly reports nothing much is happening |
+
+Neither coefficient is "the correct one" — Pearson answers *how straight?* and Spearman
+answers *how consistently ordered?*, so a gap between them is information about the shape of
+the data rather than a problem to fix.
+
+**p-values** get a live table showing the same weak `r = 0.10` at growing sample sizes. The
+relationship never changes down the column; only n does — and the verdict flips from "not
+significant" to "significant" at n = 400. Paired with the fact that `r = 0.80` at n = 5 is
+*not* significant, this makes the point that a p-value measures confidence that something is
+there, not how much it matters.
+
+### Trap rounds show both coefficients
+
+When a trap round's Pearson and Spearman values genuinely disagree (the same ≥ 0.15
+threshold the CSV panel uses), the result card shows both side by side and links to the
+explainer above. Measured across 300 runs per trap type, only the outlier trap actually
+diverges — Pearson ≈ 0.80 against Spearman ≈ 0.06 — while the curve and cluster traps move
+both coefficients together (gaps of ≈ 0.05). So the comparison appears on outlier rounds
+only, where it's a genuine revelation, rather than on every trap where near-identical
+numbers would just be noise.
+
 ## Upload your own CSV
 
 Below Calibration, drop a two-column CSV — or click to browse — and it plots through the
@@ -195,6 +229,33 @@ which is the kind of numerical code that returns a plausible-looking wrong answe
 failing loudly if it's subtly off. It's checked against `scipy.stats.pearsonr` across 88
 generated datasets — different sample sizes, tie configurations, near-perfect correlations,
 and the minimum valid sample size — matching scipy to within 1e-9 in every case.
+
+## Exporting results as PNG
+
+Both the uploaded-CSV result and the finished daily challenge can be downloaded as an image.
+No dependency: the on-page SVG is cloned, its computed styles are inlined, and it's
+rasterized through an `Image` onto a canvas which is then downloaded as a blob.
+
+**Why styles have to be inlined.** Everything on screen is styled by external CSS and CSS
+custom properties. A serialized `<svg>` carries none of that, so a naive export produces an
+unstyled black-on-transparent rectangle. `inlineStyles()` walks the clone and copies the
+computed value of every property that affects rendering.
+
+**The trend line needed special handling.** `fitSvg()` writes `stroke-dashoffset` as an
+inline attribute and relies on the `drawIn` CSS animation to carry it to 0. A clone keeps
+that inline offset but loses the animation, so the line would export completely invisible.
+The exporter explicitly zeroes the offset and clears the dash array. This is verified by a
+real-browser test that counts dark pixels in the output rather than just checking a file
+appeared.
+
+**The daily share card draws its tier marks as canvas rectangles**, not the emoji used in
+the text share string. Emoji rasterize inconsistently across platforms — colour on some,
+monochrome on others, with varying metrics — whereas rectangles in the app's own tier
+colours are identical everywhere. Results saved before tier numbers were recorded fall back
+to parsing the emoji string, so older saved results still export.
+
+Exports render at 2x for crispness and are named after the source (`study-hours.png`,
+`correlation-2026-07-24.png`), with filesystem-unsafe characters stripped.
 
 ## Running locally
 

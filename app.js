@@ -16,6 +16,7 @@
   var result = $("result"), verdictText = $("verdictText"), verdictPts = $("verdictPts");
   var actualV = $("actualV"), labelV = $("labelV"), missV = $("missV"), descV = $("descV");
   var trapBox = $("trapBox"), trapTag = $("trapTag"), trapWhat = $("trapWhat"), trapLink = $("trapLink");
+  var trapCmp = $("trapCmp");
   var roundV = $("roundV"), scoreV = $("scoreV"), streakV = $("streakV"), bestV = $("bestV");
   var instruction = $("instruction");
   var diffSeg = $("diffSeg"), modeSeg = $("modeSeg"), diffHint = $("diffHint");
@@ -40,7 +41,7 @@
   var R = Math.random;
   var round = 1, score = 0, streak = 0, best = parseInt(sg("lll_corr_best") || "0", 10) || 0;
   var diff = "normal", mode = "practice";
-  var actualR = 0, done = false, curTrap = null;
+  var actualR = 0, done = false, curTrap = null, curData = null;
   var chTime = 60, chLeft = 0, chTimer = null, chAnswered = 0;
   var stats = sj("lll_corr_stats") || { n: 0, sumAbs: 0, nStrong: 0, sumMag: 0 };
 
@@ -64,6 +65,7 @@
   function buildRound(data) {
     actualR = C.pearson(data.xs, data.ys);
     curTrap = data.trap;
+    curData = data;
 
     var sx = C.scaler(data.xs, BOX.x0, BOX.x1), sy = C.scaler(data.ys, BOX.y0, BOX.y1);
     var pts = data.xs.map(function (x, i) { return [sx(x), sy(data.ys[i])]; });
@@ -75,6 +77,8 @@
     done = false;
     result.classList.add("hidden");
     trapBox.classList.add("hidden");
+    trapCmp.innerHTML = "";
+    trapCmp.classList.add("hidden");
     C.clearSlider(SL);
     G.disable(false);
     G.set(0);
@@ -131,7 +135,29 @@
     if (curTrap) {
       trapTag.textContent = t("trapTag");
       trapWhat.textContent = t(curTrap === "curve" ? "trapCurve" : curTrap === "lever" ? "trapLever" : "trapCluster");
-      trapLink.textContent = t("trapLink");
+
+      /* Only the outlier trap makes Pearson and Spearman genuinely diverge
+         (measured: ~0.80 vs ~0.06, because ranking flattens the far point
+         to "just the largest one"). The curve and cluster traps move both
+         coefficients together, so showing near-identical numbers there
+         would be noise. Same 0.15 threshold the CSV panel uses. */
+      var rho = curData ? C.spearman(curData.xs, curData.ys) : null;
+      var diverges = rho !== null && Math.abs(actualR - rho) >= 0.15;
+      if (diverges) {
+        trapCmp.innerHTML =
+          '<div class="tc lo"><div class="k">' + t("metricPearson") + '</div>' +
+            '<div class="v">' + C.fmt(actualR) + '</div></div>' +
+          '<div class="tc hi"><div class="k">' + t("metricSpearman") + '</div>' +
+            '<div class="v">' + C.fmt(rho) + '</div></div>';
+        trapCmp.classList.remove("hidden");
+        trapLink.textContent = t("trapLinkSpear");
+        trapLink.setAttribute("href", "learn.html#metrics");
+      } else {
+        trapCmp.innerHTML = "";
+        trapCmp.classList.add("hidden");
+        trapLink.textContent = t("trapLink");
+        trapLink.setAttribute("href", "learn.html#limits");
+      }
       trapBox.classList.remove("hidden");
     }
 
@@ -190,6 +216,7 @@
     if (mode === "daily") {
       dailyErrs.push(err);
       dailyMarks.push(["", "\uD83D\uDFE9", "\uD83D\uDFE8", "\uD83D\uDFE7", "\u2B1C"][tier]);
+      dailyTiers.push(tier);
     }
   };
 
@@ -326,7 +353,7 @@
      on opposite sides of the planet see the same five plots.
      ============================================================ */
   var DAILY_N = 5;
-  var dailySpecs = [], dailyIdx = 0, dailyMarks = [], dailyErrs = [];
+  var dailySpecs = [], dailyIdx = 0, dailyMarks = [], dailyErrs = [], dailyTiers = [];
 
   function todayKey() {
     var d = new Date(), p = function (v) { return (v < 10 ? "0" : "") + v; };
@@ -361,7 +388,7 @@
 
   function startDaily() {
     chOverlay.classList.add("hidden");
-    dailyIdx = 0; dailyMarks = []; dailyErrs = [];
+    dailyIdx = 0; dailyMarks = []; dailyErrs = []; dailyTiers = [];
     score = 0; streak = 0;
     scoreV.textContent = 0; streakV.textContent = 0;
     updateHud();
@@ -370,11 +397,90 @@
 
   function endDaily() {
     var mae = dailyErrs.length ? C.avg(dailyErrs) : 0;
-    var saved = { date: todayKey(), score: score, marks: dailyMarks.join(""), mae: mae };
+    var saved = { date: todayKey(), score: score, marks: dailyMarks.join(""), mae: mae,
+                  tiers: dailyTiers.slice() };
     ss("lll_corr_daily", JSON.stringify(saved));
     if (score > best) { best = score; ss("lll_corr_best", String(best)); bestV.textContent = best; }
     showDailyCard(saved, false);
     confettiBurst(60);
+  }
+
+  /* Draw the daily result as a share image. The tier marks are drawn as
+     canvas rectangles rather than rendering the emoji: emoji rasterize
+     inconsistently across platforms (some render colour, some monochrome,
+     sizing varies), whereas rectangles in the app's own tier colours are
+     identical everywhere and match the rest of the UI. */
+  function exportDailyPng(d) {
+    var W = 640, H = 360, PAD = 32;
+    var bg = C.cssVar("--bg") || "#ffffff";
+    var surface = C.cssVar("--surface") || "#ffffff";
+    var ink = C.cssVar("--ink") || "#222220";
+    var muted = C.cssVar("--muted") || "#77776f";
+    var border = C.cssVar("--border") || "#e2e2dc";
+    var sans = C.cssVar("--sans") || "system-ui, sans-serif";
+    var mono = C.cssVar("--mono") || "ui-monospace, monospace";
+
+    var out = C.makeCanvas(W, H, 2), ctx = out.ctx;
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.fillStyle = ink;
+    ctx.font = "700 24px " + sans;
+    ctx.fillText(t("dailyShareTitle"), PAD, 52);
+    ctx.fillStyle = muted;
+    ctx.font = "14px " + sans;
+    ctx.fillText(d.date, PAD, 76);
+
+    /* Fall back to parsing the emoji string for results saved before
+       tiers were recorded, so an older stored result still exports. */
+    var tiers = d.tiers;
+    if (!tiers || !tiers.length) {
+      tiers = [];
+      var marks = Array.from(d.marks || "");
+      marks.forEach(function (m) {
+        tiers.push(m === "\uD83D\uDFE9" ? 1 : m === "\uD83D\uDFE8" ? 2 : m === "\uD83D\uDFE7" ? 3 : 4);
+      });
+    }
+
+    var sq = 76, gap = 12;
+    var totalW = tiers.length * sq + (tiers.length - 1) * gap;
+    var sx = (W - totalW) / 2, sy = 108;
+    tiers.forEach(function (tier, i) {
+      var x = sx + i * (sq + gap);
+      ctx.fillStyle = C.cssVar("--tier-" + tier) || muted;
+      var r = 12;
+      ctx.beginPath();
+      ctx.moveTo(x + r, sy);
+      ctx.arcTo(x + sq, sy, x + sq, sy + sq, r);
+      ctx.arcTo(x + sq, sy + sq, x, sy + sq, r);
+      ctx.arcTo(x, sy + sq, x, sy, r);
+      ctx.arcTo(x, sy, x + sq, sy, r);
+      ctx.closePath();
+      ctx.fill();
+    });
+
+    var by = sy + sq + 28, bh = 68, bw = (W - PAD * 2 - 12) / 2;
+    [[t("finalScore"), d.score + "/" + (DAILY_N * 100)],
+     [t("avgMiss"), d.mae.toFixed(2)]].forEach(function (cell, i) {
+      var x = PAD + i * (bw + 12);
+      ctx.fillStyle = surface;
+      ctx.fillRect(x, by, bw, bh);
+      ctx.strokeStyle = border;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x + 0.5, by + 0.5, bw - 1, bh - 1);
+      ctx.fillStyle = muted;
+      ctx.font = "12px " + sans;
+      ctx.fillText(cell[0], x + 14, by + 26);
+      ctx.fillStyle = ink;
+      ctx.font = "700 24px " + mono;
+      ctx.fillText(cell[1], x + 14, by + 54);
+    });
+
+    ctx.fillStyle = muted;
+    ctx.font = "12px " + sans;
+    ctx.fillText(location.host + location.pathname, PAD, H - 18);
+
+    return C.downloadCanvas(out.canvas, C.safeFilename("correlation-" + d.date, "png"));
   }
 
   function showDailyCard(d, replay) {
@@ -385,12 +491,31 @@
         '<div class="chstat"><div class="k">' + t("finalScore") + '</div><div class="v">' + d.score + '/' + (DAILY_N * 100) + '</div></div>' +
         '<div class="chstat"><div class="k">' + t("avgMiss") + '</div><div class="v">' + d.mae.toFixed(2) + '</div></div></div>' +
       (replay ? '<p style="margin:0 0 16px;">' + t("dailyPlayed") + '</p>' : '') +
-      '<div class="chactions">' +
+      '<div class="chactions" style="margin-bottom:10px;">' +
         '<button class="btn secondary" id="dBack2" style="flex:0 0 auto;">' + t("backToPractice") + '</button>' +
-        '<button class="btn" id="dShare" style="flex:1;">' + t("dailyShare") + '</button></div>';
+        '<button class="btn" id="dShare" style="flex:1;">' + t("dailyShare") + '</button></div>' +
+      '<button class="btn secondary" id="dPng" style="width:100%;">' + t("exportPng") + '</button>';
     chOverlay.classList.remove("hidden");
     $("dShare").onclick = function () { shareDaily(d); };
     $("dBack2").onclick = backToPractice;
+    $("dPng").onclick = function () {
+      var btn = $("dPng");
+      btn.disabled = true;
+      var restore = function () { btn.disabled = false; };
+      try {
+        var pr = exportDailyPng(d);
+        if (pr && pr.then) pr.then(restore, function (err) {
+          console.error("[lll-correlation] daily PNG export failed:", err);
+          toast(t("exportErr"));
+          restore();
+        });
+        else restore();
+      } catch (err) {
+        console.error("[lll-correlation] daily PNG export failed:", err);
+        toast(t("exportErr"));
+        restore();
+      }
+    };
   }
 
   function shareText(d) {
@@ -625,6 +750,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var file = $("csvFile"), status = $("csvStatus"), card = $("csvCard");
   var plot = $("csvPlot"), meta = $("csvMeta"), metrics = $("csvMetrics"), hint = $("csvHint");
+  var exportBtn = $("csvExport");
   if (!file) return;
   var dropzone = $("dropzone");
   if (!dropzone) return;
@@ -723,6 +849,8 @@
     var rho = C.spearman(data.xs, data.ys);
     var r2 = C.rSquared(r);
     var p = C.pValue(r, data.xs.length);
+    lastMeta = { name: data.name || t("uploadTitle"), n: data.xs.length,
+                 r: r, rho: rho, r2: r2, p: p };
 
     var sx = C.scaler(data.xs, BOX.x0, BOX.x1), sy = C.scaler(data.ys, BOX.y0, BOX.y1);
     var pts = data.xs.map(function (x, i) { return [sx(x), sy(data.ys[i])]; });
@@ -756,18 +884,98 @@
     var diverges = Math.abs(r - rho) >= 0.15;
     hint.innerHTML = diverges ? '<p class="tipbox" style="margin-top:10px;">' + t("metricDivergeHint") + '</p>' : "";
 
+    exportBtn.classList.remove("hidden");
     card.classList.remove("hidden");
   }
 
+  /* ============================================================
+     PNG export of the uploaded-data result
+     Composes the plot together with its metrics onto one canvas, so the
+     downloaded file stands on its own instead of being a bare plot with
+     no numbers attached.
+     ============================================================ */
+  var lastMeta = null; // { name, n, r, rho, r2, p } for the current plot
+
+  function exportCsvPng() {
+    if (!lastData || !lastMeta) return;
+    var W = 640, PAD = 24;
+    var plotW = W - PAD * 2, plotH = Math.round(plotW * 240 / 320);
+    var headH = 74, metricsH = 92, footH = 34;
+    var H = headH + plotH + metricsH + footH;
+
+    var bg = C.cssVar("--bg") || "#ffffff";
+    var surface = C.cssVar("--surface") || "#ffffff";
+    var ink = C.cssVar("--ink") || "#222220";
+    var muted = C.cssVar("--muted") || "#77776f";
+    var border = C.cssVar("--border") || "#e2e2dc";
+    var sans = C.cssVar("--sans") || "system-ui, sans-serif";
+    var mono = C.cssVar("--mono") || "ui-monospace, monospace";
+
+    var out = C.makeCanvas(W, H, 2);
+    var ctx = out.ctx;
+
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.fillStyle = ink;
+    ctx.font = "600 19px " + sans;
+    ctx.textBaseline = "alphabetic";
+    ctx.fillText(lastMeta.name, PAD, 34);
+
+    ctx.fillStyle = muted;
+    ctx.font = "13px " + sans;
+    ctx.fillText(tfa("uploadPoints", [lastMeta.n]) + "  \u00b7  " + t(C.bucket(lastMeta.r)), PAD, 56);
+
+    return C.svgToImage(plot, plotW, plotH).then(function (img) {
+      ctx.fillStyle = surface;
+      ctx.fillRect(PAD, headH, plotW, plotH);
+      ctx.strokeStyle = border;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(PAD + 0.5, headH + 0.5, plotW - 1, plotH - 1);
+      ctx.drawImage(img, PAD, headH, plotW, plotH);
+
+      /* Metrics strip: same four numbers as the on-page card, in the same
+         order, so the image and the page can't tell different stories. */
+      var cells = [
+        [t("metricPearson"), C.fmt(lastMeta.r)],
+        [t("metricSpearman"), C.fmt(lastMeta.rho)],
+        [t("metricRSq"), lastMeta.r2.toFixed(3)],
+        [t("metricPValue"), lastMeta.p === null ? "\u2014"
+          : (lastMeta.p < 0.001 ? "< 0.001" : lastMeta.p.toFixed(3))]
+      ];
+      var cw = (plotW - 8 * 3) / 4, cy = headH + plotH + 16;
+      cells.forEach(function (cell, i) {
+        var cx = PAD + i * (cw + 8);
+        ctx.fillStyle = surface;
+        ctx.fillRect(cx, cy, cw, 56);
+        ctx.strokeStyle = border;
+        ctx.strokeRect(cx + 0.5, cy + 0.5, cw - 1, 55);
+        ctx.fillStyle = muted;
+        ctx.font = "11px " + sans;
+        ctx.fillText(cell[0], cx + 10, cy + 22);
+        ctx.fillStyle = ink;
+        ctx.font = "700 17px " + mono;
+        ctx.fillText(cell[1], cx + 10, cy + 44);
+      });
+
+      ctx.fillStyle = muted;
+      ctx.font = "11px " + sans;
+      ctx.fillText(t("brand") + "  \u00b7  " + C.todayStamp(), PAD, H - 14);
+
+      return C.downloadCanvas(out.canvas, C.safeFilename(lastMeta.name, "png"));
+    });
+  }
   function hidePlot() {
     /* Blank everything, not just hide the container, so a subsequent
        test/assertion (or a user peeking at DevTools) can never see stale
        content from a previous upload. */
     lastData = null;
+    lastMeta = null;
     plot.innerHTML = "";
     meta.innerHTML = "";
     metrics.innerHTML = "";
     hint.innerHTML = "";
+    exportBtn.classList.add("hidden");
     card.classList.add("hidden");
   }
 
@@ -808,6 +1016,7 @@
           hidePlot();
           return;
         }
+        pairs.name = f.name;
         render(pairs);
         var msg = tfa("uploadOk", [f.name, pairs.xs.length]);
         if (pairs.skipped) msg += " " + tfa("uploadSkipped", [pairs.skipped]);
@@ -861,6 +1070,24 @@
      that without affecting the dropzone's own handlers above (which run
      first, on the more specific target, and already called preventDefault
      there). */
+  exportBtn.addEventListener("click", function () {
+    exportBtn.disabled = true;
+    var restore = function () { exportBtn.disabled = false; };
+    try {
+      var pr = exportCsvPng();
+      if (pr && pr.then) pr.then(restore, function (err) {
+        console.error("[lll-correlation] PNG export failed:", err);
+        setStatus(t("exportErr"), "err");
+        restore();
+      });
+      else restore();
+    } catch (err) {
+      console.error("[lll-correlation] PNG export failed:", err);
+      setStatus(t("exportErr"), "err");
+      restore();
+    }
+  });
+
   document.addEventListener("dragover", function (e) { e.preventDefault(); });
   document.addEventListener("drop", function (e) { e.preventDefault(); });
 

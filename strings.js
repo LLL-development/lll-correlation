@@ -190,7 +190,31 @@ var LLL_CORR_STRINGS = {
     metricPValue: "p値",
     metricSig: "有意",
     metricNotSig: "有意でない",
-    metricDivergeHint: "ピアソンとスピアマンの値が大きくずれています。ピアソンは直線の関係しか見ませんが、スピアマンは増加・減少が一貫していればどんな関係でも捉えます。このズレは、実際の関係が直線ではないことを示している場合が多いです — 上の散布図を見てみましょう。"
+    metricDivergeHint: "ピアソンとスピアマンの値が大きくずれています。ピアソンは直線の関係しか見ませんが、スピアマンは増加・減少が一貫していればどんな関係でも捉えます。このズレは、実際の関係が直線ではないことを示している場合が多いです — 上の散布図を見てみましょう。",
+
+    /* ---- Learn: beyond Pearson ---- */
+    beyondTitle: "ピアソンの r の先へ",
+    beyondLede: "ピアソンの r が答えているのは「点がどれだけ直線に近いか」という1つの問いだけです。r には答えられない問いに、別の2つの数値が答えてくれます。",
+    spearTitle: "スピアマンの順位相関",
+    spearLede: "スピアマンは実際の値を捨て、順序（1番目、2番目、3番目…）だけを残して、その順位で相関を測ります。値どうしの「間隔」が見えなくなりますが、それがまさに役立つ場面が2つあります。",
+    spearCurveT: "ずっと上がり続ける曲線",
+    spearCurveW: "どの段階でも必ず上がるので順位はきれいな階段になり、スピアマンは 1.00 になります。ただし曲線は進むほど急になるため、直線としては当てはまりが悪く、直線しか測らないピアソンは低めに評価します。ここではスピアマンが正しい：関係は完璧で、ただ直線でないだけです。",
+    spearLeverT: "遠くにある1点",
+    spearLeverW: "点の集まり自体には傾向がなく、遠くの1点だけが相関を作り出しています。ピアソンはその点の「距離」を感じ取って強い関係だと報告します。順位にすればその点は「ただの最大値」に潰れるので、スピアマンは真実（ほとんど何もない）を捉えます。",
+    spearTip: "どちらが正解というものではありません。ピアソンは「どれだけ直線か」、スピアマンは「どれだけ順序が一貫しているか」に答えています。だから2つが食い違うとき、その差はデータの形についての情報であって、解決すべき問題ではありません。",
+    pTitle: "p値がわかること・わからないこと",
+    pLede: "p値が答えるのは1つの限られた問いです。「もし本当は何の関係もないとしたら、偶然だけでこれと同じくらい強い相関がどのくらいの頻度で現れるか？」小さい p値は「めったに現れない」という意味で、つまり偶然として片付けにくい、ということです。",
+    pTableLede: "下の表はどの行も同じ弱い相関 r = 0.10 です。関係そのものは何も変わらず、変わるのはデータの個数だけです。",
+    pColN: "データ数",
+    pColP: "p値",
+    pColVerdict: "p < 0.05 での判定",
+    pWarnTitle: "「有意」は「強い」という意味ではない",
+    pWarnBody: "データが400個あれば、相関 0.10 ——ばらつきのわずか1%しか説明せず、散布図では見えないほど弱い関係——でも「統計的に有意」になります。一方で r = 0.80 でもデータが5個なら有意になりません。p値が測るのは「何かがあると言い切れるか」であって、「それがどれだけ重要か」ではありません。両方とも大事な問いですが、p値が答えるのは片方だけです。",
+    trapLinkSpear: "2つの数値が食い違う理由 →",
+
+    /* ---- PNG export ---- */
+    exportPng: "PNG をダウンロード",
+    exportErr: "画像を作成できませんでした。"
   },
 
   /* ---------------------------------------------------------- English */
@@ -377,7 +401,31 @@ var LLL_CORR_STRINGS = {
     metricPValue: "p-value",
     metricSig: "significant",
     metricNotSig: "not significant",
-    metricDivergeHint: "Pearson and Spearman disagree by a fair amount here. Pearson only sees a straight-line relationship; Spearman sees any relationship that consistently rises or falls. That gap usually means the real pattern isn't a straight line — look at the plot above."
+    metricDivergeHint: "Pearson and Spearman disagree by a fair amount here. Pearson only sees a straight-line relationship; Spearman sees any relationship that consistently rises or falls. That gap usually means the real pattern isn't a straight line — look at the plot above.",
+
+    /* ---- Learn: beyond Pearson ---- */
+    beyondTitle: "Beyond Pearson's r",
+    beyondLede: "Pearson's r is one specific question: how close are these dots to a straight line? Two other numbers answer questions it can't.",
+    spearTitle: "Spearman's rank correlation",
+    spearLede: "Spearman throws away the actual values and keeps only their order — 1st, 2nd, 3rd — then measures correlation on those ranks. That makes it blind to how far apart the values are, which turns out to be exactly what you want in two very different situations.",
+    spearCurveT: "A curve that always rises",
+    spearCurveW: "Every step goes up, so the ranks form a perfect ladder and Spearman reads 1.00. But the curve gets steeper as it goes, so it's a poor straight line — and Pearson, which only measures straight lines, marks it down. Here Spearman is right: the relationship is perfect, just not linear.",
+    spearLeverT: "One far-away point",
+    spearLeverW: "The cloud has no trend at all; a single distant point creates the entire correlation. Pearson feels that point's distance and reports a strong relationship. Ranking flattens it to “just the largest one”, so Spearman sees the truth — nothing much is going on.",
+    spearTip: "Neither coefficient is the correct one. Pearson answers “how straight?” and Spearman answers “how consistently ordered?” — so when they disagree, that gap is information about the shape of your data, not a problem to resolve.",
+    pTitle: "What a p-value does and doesn't mean",
+    pLede: "A p-value answers one narrow question: if there were genuinely no relationship at all, how often would random chance alone throw up a correlation at least this strong? A small p-value means “rarely” — so the pattern is hard to dismiss as luck.",
+    pTableLede: "Below is the same weak correlation of r = 0.10 every time. Nothing about the relationship changes down the column — only the number of data points does.",
+    pColN: "Data points",
+    pColP: "p-value",
+    pColVerdict: "Verdict at p < 0.05",
+    pWarnTitle: "Significant does not mean strong",
+    pWarnBody: "With 400 points, a correlation of 0.10 — which explains 1% of the variation and is invisible on a plot — counts as “statistically significant”. Meanwhile r = 0.80 with only 5 points does not. A p-value measures how confident you can be that something is there, not how much it matters. Both questions need answering, and only one of them is a p-value.",
+    trapLinkSpear: "Why the two numbers disagree →",
+
+    /* ---- PNG export ---- */
+    exportPng: "Download PNG",
+    exportErr: "Couldn't create the image."
   },
 
   /* ---------------------------------------------------------- 简体中文 */
@@ -564,7 +612,31 @@ var LLL_CORR_STRINGS = {
     metricPValue: "p 值",
     metricSig: "显著",
     metricNotSig: "不显著",
-    metricDivergeHint: "皮尔逊和斯皮尔曼的结果差异较大。皮尔逊只能看到直线关系，而斯皮尔曼能捕捉任何持续上升或下降的关系。这种差异通常说明真实的关系并非直线——请看看上面的散点图。"
+    metricDivergeHint: "皮尔逊和斯皮尔曼的结果差异较大。皮尔逊只能看到直线关系，而斯皮尔曼能捕捉任何持续上升或下降的关系。这种差异通常说明真实的关系并非直线——请看看上面的散点图。",
+
+    /* ---- Learn: beyond Pearson ---- */
+    beyondTitle: "皮尔逊 r 之外",
+    beyondLede: "皮尔逊 r 只回答一个特定的问题：这些点离一条直线有多近？另外两个数字能回答它答不了的问题。",
+    spearTitle: "斯皮尔曼秩相关",
+    spearLede: "斯皮尔曼丢掉实际数值，只保留它们的顺序（第 1、第 2、第 3……），再用这些排名计算相关。这样它就看不见数值之间的间距了——而在两种截然不同的情况下，这恰恰是你想要的。",
+    spearCurveT: "一条一直上升的曲线",
+    spearCurveW: "每一步都在上升，所以排名形成完美的阶梯，斯皮尔曼读作 1.00。但曲线越走越陡，作为直线拟合得并不好，而只衡量直线的皮尔逊就给它打了低分。这里斯皮尔曼是对的：关系是完美的，只是不是直线。",
+    spearLeverT: "一个很远的点",
+    spearLeverW: "点云本身毫无趋势，整个相关性都来自那一个远处的点。皮尔逊感受到那个点的距离，于是报告出很强的关系。而排名把它压成「只是最大的那个」，所以斯皮尔曼看到了真相——其实什么都没发生。",
+    spearTip: "没有哪个系数才是「正确」的。皮尔逊回答「有多直」，斯皮尔曼回答「顺序有多一致」——所以当两者不一致时，这个差距是关于数据形状的信息，而不是需要解决的问题。",
+    pTitle: "p 值说明了什么，又没说明什么",
+    pLede: "p 值只回答一个很窄的问题：如果其实完全没有关系，纯粹靠运气出现至少这么强的相关的概率有多大？p 值很小意味着「很少见」——也就是说，这个模式不太好用巧合来解释。",
+    pTableLede: "下面每一行都是同样微弱的相关 r = 0.10。关系本身没有任何变化，变的只是数据点的数量。",
+    pColN: "数据点数",
+    pColP: "p 值",
+    pColVerdict: "p < 0.05 的判定",
+    pWarnTitle: "显著不等于强",
+    pWarnBody: "有 400 个点时，相关 0.10——只解释了 1% 的变异，在图上根本看不出来——也算「统计显著」。而 r = 0.80 若只有 5 个点，反倒不显著。p 值衡量的是「你能多有把握说它存在」，而不是「它有多重要」。这两个问题都要回答，但 p 值只回答其中一个。",
+    trapLinkSpear: "为什么两个数字不一致 →",
+
+    /* ---- PNG export ---- */
+    exportPng: "下载 PNG",
+    exportErr: "无法生成图片。"
   },
 
   /* ---------------------------------------------------------- 繁體中文 */
@@ -751,7 +823,31 @@ var LLL_CORR_STRINGS = {
     metricPValue: "p 值",
     metricSig: "顯著",
     metricNotSig: "不顯著",
-    metricDivergeHint: "皮爾遜和斯皮爾曼的結果差異較大。皮爾遜只能看到直線關係，而斯皮爾曼能捕捉任何持續上升或下降的關係。這種差異通常說明真實的關係並非直線——請看看上面的散點圖。"
+    metricDivergeHint: "皮爾遜和斯皮爾曼的結果差異較大。皮爾遜只能看到直線關係，而斯皮爾曼能捕捉任何持續上升或下降的關係。這種差異通常說明真實的關係並非直線——請看看上面的散點圖。",
+
+    /* ---- Learn: beyond Pearson ---- */
+    beyondTitle: "皮爾遜 r 之外",
+    beyondLede: "皮爾遜 r 只回答一個特定的問題：這些點離一條直線有多近？另外兩個數字能回答它答不了的問題。",
+    spearTitle: "斯皮爾曼秩相關",
+    spearLede: "斯皮爾曼丟掉實際數值，只保留它們的順序（第 1、第 2、第 3……），再用這些排名計算相關。這樣它就看不見數值之間的間距了——而在兩種截然不同的情況下，這恰恰是你想要的。",
+    spearCurveT: "一條一直上升的曲線",
+    spearCurveW: "每一步都在上升，所以排名形成完美的階梯，斯皮爾曼讀作 1.00。但曲線越走越陡，作為直線擬合得並不好，而只衡量直線的皮爾遜就給它打了低分。這裡斯皮爾曼是對的：關係是完美的，只是不是直線。",
+    spearLeverT: "一個很遠的點",
+    spearLeverW: "點雲本身毫無趨勢，整個相關性都來自那一個遠處的點。皮爾遜感受到那個點的距離，於是報告出很強的關係。而排名把它壓成「只是最大的那個」，所以斯皮爾曼看到了真相——其實什麼都沒發生。",
+    spearTip: "沒有哪個係數才是「正確」的。皮爾遜回答「有多直」，斯皮爾曼回答「順序有多一致」——所以當兩者不一致時，這個差距是關於資料形狀的資訊，而不是需要解決的問題。",
+    pTitle: "p 值說明了什麼，又沒說明什麼",
+    pLede: "p 值只回答一個很窄的問題：如果其實完全沒有關係，純粹靠運氣出現至少這麼強的相關的機率有多大？p 值很小意味著「很少見」——也就是說，這個模式不太好用巧合來解釋。",
+    pTableLede: "下面每一列都是同樣微弱的相關 r = 0.10。關係本身沒有任何變化，變的只是資料點的數量。",
+    pColN: "資料點數",
+    pColP: "p 值",
+    pColVerdict: "p < 0.05 的判定",
+    pWarnTitle: "顯著不等於強",
+    pWarnBody: "有 400 個點時，相關 0.10——只解釋了 1% 的變異，在圖上根本看不出來——也算「統計顯著」。而 r = 0.80 若只有 5 個點，反倒不顯著。p 值衡量的是「你能多有把握說它存在」，而不是「它有多重要」。這兩個問題都要回答，但 p 值只回答其中一個。",
+    trapLinkSpear: "為什麼兩個數字不一致 →",
+
+    /* ---- PNG export ---- */
+    exportPng: "下載 PNG",
+    exportErr: "無法產生圖片。"
   },
 
   /* ---------------------------------------------------------- 한국어 */
@@ -938,7 +1034,31 @@ var LLL_CORR_STRINGS = {
     metricPValue: "p값",
     metricSig: "유의함",
     metricNotSig: "유의하지 않음",
-    metricDivergeHint: "피어슨과 스피어만 값이 꽤 차이가 납니다. 피어슨은 직선 관계만 보지만, 스피어만은 꾸준히 증가하거나 감소하는 관계라면 무엇이든 포착합니다. 이런 차이는 대개 실제 관계가 직선이 아니라는 뜻이에요 — 위 그래프를 확인해 보세요."
+    metricDivergeHint: "피어슨과 스피어만 값이 꽤 차이가 납니다. 피어슨은 직선 관계만 보지만, 스피어만은 꾸준히 증가하거나 감소하는 관계라면 무엇이든 포착합니다. 이런 차이는 대개 실제 관계가 직선이 아니라는 뜻이에요 — 위 그래프를 확인해 보세요.",
+
+    /* ---- Learn: beyond Pearson ---- */
+    beyondTitle: "피어슨 r 너머",
+    beyondLede: "피어슨 r은 “이 점들이 직선에 얼마나 가까운가”라는 하나의 특정한 질문에만 답합니다. 다른 두 숫자는 r이 답할 수 없는 질문에 답해 줍니다.",
+    spearTitle: "스피어만 순위상관",
+    spearLede: "스피어만은 실제 값을 버리고 순서(1등, 2등, 3등…)만 남긴 뒤 그 순위로 상관을 잽니다. 값들 사이의 간격이 보이지 않게 되는데, 아주 다른 두 상황에서 바로 그게 필요한 성질이 됩니다.",
+    spearCurveT: "계속 올라가기만 하는 곡선",
+    spearCurveW: "모든 단계에서 올라가므로 순위가 완벽한 계단이 되고 스피어만은 1.00이 됩니다. 다만 곡선이 갈수록 가팔라져서 직선으로는 잘 맞지 않고, 직선만 재는 피어슨은 점수를 낮게 줍니다. 여기서는 스피어만이 옳습니다. 관계는 완벽하고, 단지 직선이 아닐 뿐입니다.",
+    spearLeverT: "멀리 떨어진 점 하나",
+    spearLeverW: "점 구름 자체에는 아무 추세도 없고, 멀리 있는 점 하나가 상관 전체를 만들어 냅니다. 피어슨은 그 점의 거리를 느끼고 강한 관계라고 보고합니다. 순위로 바꾸면 그 점은 “그냥 제일 큰 값”으로 눌려서, 스피어만은 진실(사실 별일 없음)을 봅니다.",
+    spearTip: "어느 쪽이 정답인 게 아닙니다. 피어슨은 “얼마나 곧은가”에, 스피어만은 “순서가 얼마나 일관적인가”에 답합니다. 그래서 둘이 어긋날 때 그 차이는 데이터의 모양에 대한 정보이지, 해결해야 할 문제가 아닙니다.",
+    pTitle: "p값이 말해주는 것과 말해주지 않는 것",
+    pLede: "p값은 딱 하나의 좁은 질문에 답합니다. “정말로 아무 관계가 없다면, 순전히 우연만으로 이 정도로 강한 상관이 얼마나 자주 나타날까?” p값이 작다는 건 “드물게”라는 뜻이고, 곧 그 패턴을 우연으로 넘기기 어렵다는 뜻입니다.",
+    pTableLede: "아래는 매번 똑같이 약한 상관 r = 0.10입니다. 관계 자체는 전혀 변하지 않고, 바뀌는 건 데이터 개수뿐입니다.",
+    pColN: "데이터 개수",
+    pColP: "p값",
+    pColVerdict: "p < 0.05 기준 판정",
+    pWarnTitle: "유의하다는 건 강하다는 뜻이 아닙니다",
+    pWarnBody: "데이터가 400개면 상관 0.10—변동의 1%만 설명하고 그래프에서는 보이지도 않는—도 “통계적으로 유의”해집니다. 반면 r = 0.80이라도 데이터가 5개뿐이면 유의하지 않습니다. p값이 재는 것은 “무언가 있다고 얼마나 확신할 수 있는가”이지 “그것이 얼마나 중요한가”가 아닙니다. 두 질문 모두 답이 필요하지만, p값이 답하는 건 그중 하나뿐입니다.",
+    trapLinkSpear: "두 숫자가 어긋나는 이유 →",
+
+    /* ---- PNG export ---- */
+    exportPng: "PNG 내려받기",
+    exportErr: "이미지를 만들지 못했습니다."
   },
 
   /* ---------------------------------------------------------- Bahasa Melayu */
@@ -1125,6 +1245,30 @@ var LLL_CORR_STRINGS = {
     metricPValue: "nilai-p",
     metricSig: "signifikan",
     metricNotSig: "tidak signifikan",
-    metricDivergeHint: "Pearson dan Spearman tidak sepadan di sini. Pearson hanya nampak hubungan garis lurus; Spearman menangkap sebarang hubungan yang sentiasa meningkat atau menurun. Jurang ini biasanya bermaksud corak sebenar bukan garis lurus — lihat plot di atas."
+    metricDivergeHint: "Pearson dan Spearman tidak sepadan di sini. Pearson hanya nampak hubungan garis lurus; Spearman menangkap sebarang hubungan yang sentiasa meningkat atau menurun. Jurang ini biasanya bermaksud corak sebenar bukan garis lurus — lihat plot di atas.",
+
+    /* ---- Learn: beyond Pearson ---- */
+    beyondTitle: "Melangkaui Pearson r",
+    beyondLede: "Pearson r menjawab satu soalan khusus sahaja: sedekat mana titik-titik ini kepada satu garis lurus? Dua nombor lain menjawab soalan yang r tidak boleh jawab.",
+    spearTitle: "Korelasi pangkat Spearman",
+    spearLede: "Spearman membuang nilai sebenar dan menyimpan susunannya sahaja — ke-1, ke-2, ke-3 — kemudian mengukur korelasi pada pangkat itu. Ia jadi buta kepada jarak antara nilai, dan itulah yang anda mahukan dalam dua situasi yang sangat berbeza.",
+    spearCurveT: "Lengkung yang sentiasa menaik",
+    spearCurveW: "Setiap langkah menaik, jadi pangkatnya membentuk tangga sempurna dan Spearman membaca 1.00. Tetapi lengkung itu makin curam, jadi ia garis lurus yang buruk — dan Pearson, yang hanya mengukur garis lurus, menurunkan markahnya. Di sini Spearman betul: hubungan itu sempurna, cuma bukan lurus.",
+    spearLeverT: "Satu titik yang jauh",
+    spearLeverW: "Awan titik itu langsung tiada arah aliran; satu titik jauh mencipta keseluruhan korelasi. Pearson merasai jarak titik itu lalu melaporkan hubungan yang kuat. Pemangkatan meratakannya menjadi “sekadar yang terbesar”, jadi Spearman nampak kebenarannya — sebenarnya tiada apa-apa berlaku.",
+    spearTip: "Tiada pekali yang “betul”. Pearson menjawab “selurus mana?” dan Spearman menjawab “sekonsisten mana susunannya?” — jadi apabila kedua-duanya tidak sepadan, jurang itu ialah maklumat tentang bentuk data anda, bukan masalah yang perlu diselesaikan.",
+    pTitle: "Apa yang nilai-p maksudkan dan tidak maksudkan",
+    pLede: "Nilai-p menjawab satu soalan sempit: jika sememangnya tiada hubungan langsung, berapa kerap kebetulan semata-mata menghasilkan korelasi sekurang-kurangnya sekuat ini? Nilai-p yang kecil bermaksud “jarang” — jadi corak itu sukar ditolak sebagai nasib.",
+    pTableLede: "Di bawah ialah korelasi lemah yang sama, r = 0.10, setiap kali. Hubungan itu sendiri tidak berubah — hanya bilangan titik data yang berubah.",
+    pColN: "Bilangan titik",
+    pColP: "Nilai-p",
+    pColVerdict: "Keputusan pada p < 0.05",
+    pWarnTitle: "Signifikan tidak bermakna kuat",
+    pWarnBody: "Dengan 400 titik, korelasi 0.10 — yang menerangkan 1% variasi dan tidak kelihatan pada plot — dikira “signifikan secara statistik”. Sementara itu r = 0.80 dengan hanya 5 titik tidak. Nilai-p mengukur sejauh mana anda boleh yakin sesuatu itu wujud, bukan sepenting mana ia. Kedua-dua soalan perlu dijawab, dan nilai-p hanya menjawab satu.",
+    trapLinkSpear: "Mengapa kedua-dua nombor berbeza →",
+
+    /* ---- PNG export ---- */
+    exportPng: "Muat turun PNG",
+    exportErr: "Tidak dapat menghasilkan imej."
   }
 };
