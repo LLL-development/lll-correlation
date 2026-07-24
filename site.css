@@ -167,6 +167,16 @@ input[type=range]:disabled { cursor:default; }
 .trap p { margin:0 0 6px; font-size:13px; line-height:1.6; color:var(--ink); }
 .trap .tlink { margin:0; font-size:13px; }
 .trap .tlink a { color:var(--muted); }
+/* Shown on a trap round only when the two coefficients actually disagree,
+   so it stays a revelation rather than background noise. */
+.trapcmp { display:flex; gap:8px; margin:10px 0; }
+.trapcmp .tc { flex:1; background:var(--bg); border:1px solid var(--border);
+  border-radius:8px; padding:7px 9px; text-align:center; }
+.trapcmp .tc .k { font-size:10px; color:var(--muted); }
+.trapcmp .tc .v { font-family:var(--mono); font-size:15px; font-weight:700; margin-top:1px;
+  font-variant-numeric:tabular-nums; }
+.trapcmp .tc.lo .v { color:var(--tier-4); }
+.trapcmp .tc.hi .v { color:var(--tier-1); }
 
 
 /* ---------- example plot grid ---------- */

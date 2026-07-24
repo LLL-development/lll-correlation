@@ -71,7 +71,71 @@
     }).join("");
   }
 
-  function renderAll() { buildExamples(); buildBands(); buildLimits(); }
+  /* ---- Beyond Pearson's r ----
+     Two examples, chosen because they disagree in *opposite* directions.
+     Everything shown is measured from the plotted points at runtime, so
+     the captions can't drift away from the pictures. */
+  function buildSpearPair() {
+    /* A: a monotonic curve. Every step goes up, so the ranks are a perfect
+       ladder and Spearman reads 1.00 - but the curve accelerates, so the
+       straight-line fit Pearson measures is visibly worse.
+       B: the game's own outlier trap. One far-away point drags Pearson up
+       to ~0.8; ranks flatten that point to "just the largest one", so
+       Spearman correctly reports there's nothing in the cloud. */
+    var xs = [1,2,3,4,5,6,7,8,9,10,11,12];
+    var curve = { xs: xs, ys: xs.map(function (x) { return Math.pow(1.9, x); }) };
+    var lever = C.makeTrap("lever", 40, false, C.mulberry32(4));
+
+    var rows = [
+      { data: curve, tk: "spearCurveT", wk: "spearCurveW" },
+      { data: lever, tk: "spearLeverT", wk: "spearLeverW" }
+    ];
+
+    $("spearPair").innerHTML = rows.map(function (row) {
+      var r = C.pearson(row.data.xs, row.data.ys);
+      var rho = C.spearman(row.data.xs, row.data.ys);
+      var m = mini(TALL, row.data, 130, 96, { fit: true, r: 2.2 });
+      /* Colour whichever coefficient is the more trustworthy read here:
+         higher = "this one saw the relationship", lower = "this one was
+         fooled". Which is which differs between the two examples, which
+         is exactly the point. */
+      var pearsonCls = r > rho ? "lo" : "";
+      var spearCls = rho > r ? "hi" : "lo";
+      return '<div class="cmp">' + m.svg +
+        '<div class="ct">' + t(row.tk) + '</div>' +
+        '<div class="cvals">' +
+          '<div class="cv ' + pearsonCls + '"><div class="k">' + t("metricPearson") + '</div>' +
+            '<div class="v">' + C.fmt(r) + '</div></div>' +
+          '<div class="cv ' + spearCls + '"><div class="k">' + t("metricSpearman") + '</div>' +
+            '<div class="v">' + C.fmt(rho) + '</div></div>' +
+        '</div>' +
+        '<p class="cwhy">' + t(row.wk) + '</p></div>';
+    }).join("");
+  }
+
+  /* The same correlation at growing sample sizes. Nothing about the
+     relationship changes down the column - only how much data there is -
+     and yet the verdict flips. That is the entire lesson about p-values,
+     and it is far more convincing computed live than asserted in prose. */
+  function buildPTable() {
+    var R_DEMO = 0.10;
+    var ns = [10, 30, 100, 400, 1000];
+    var html =
+      '<div class="prow"><span>' + t("pColN") + '</span><span>' + t("pColP") + '</span>' +
+      '<span>' + t("pColVerdict") + '</span></div>';
+    ns.forEach(function (n) {
+      var p = C.pValue(R_DEMO, n);
+      var sig = p < 0.05;
+      html += '<div class="prow">' +
+        '<span class="mono">' + n + '</span>' +
+        '<span class="mono">' + (p < 0.0001 ? "< 0.0001" : p.toFixed(4)) + '</span>' +
+        '<span class="' + (sig ? "yes" : "no") + '">' + t(sig ? "metricSig" : "metricNotSig") + '</span>' +
+        '</div>';
+    });
+    $("pTable").innerHTML = html;
+  }
+
+  function renderAll() { buildExamples(); buildBands(); buildLimits(); buildSpearPair(); buildPTable(); }
   C.watchTheme(renderAll);
 
   LLL_I18N.init(LLL_CORR_STRINGS, {

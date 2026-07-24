@@ -363,6 +363,124 @@
     };
   }
 
+  /* ============================================================
+     PNG export
+     No dependency: clone the SVG, inline every computed style onto the
+     clone, rasterize through an Image onto a canvas, download the blob.
+
+     The reason styles must be inlined is that everything on screen is
+     styled by external CSS and CSS custom properties. A serialized <svg>
+     carries none of that with it, so a naive export produces an unstyled
+     black-on-transparent rectangle.
+     ============================================================ */
+
+  /* Properties that actually affect how the plots render. Copying every
+     computed property instead would bloat the output by ~100x and slow
+     serialization to a crawl on larger scatter plots. */
+  var EXPORT_PROPS = [
+    "fill", "fill-opacity", "stroke", "stroke-width", "stroke-linecap",
+    "stroke-linejoin", "stroke-dasharray", "stroke-dashoffset", "opacity",
+    "font-family", "font-size", "font-weight", "text-anchor", "letter-spacing"
+  ];
+
+  function inlineStyles(srcEl, cloneEl) {
+    var cs = getComputedStyle(srcEl);
+    var decl = "";
+    for (var i = 0; i < EXPORT_PROPS.length; i++) {
+      var p = EXPORT_PROPS[i];
+      var v = cs.getPropertyValue(p);
+      if (v) decl += p + ":" + v + ";";
+    }
+    /* Animations don't run in a serialized SVG, so anything whose final
+       appearance depends on one has to be pinned to its end state here.
+       The trend line is the case that bites: fitSvg() writes
+       stroke-dashoffset inline and relies on the drawIn animation to
+       carry it to 0, so a clone would keep the full offset and render
+       the line completely invisible. */
+    decl += "animation:none;";
+    if (cloneEl.classList && cloneEl.classList.contains("fit")) {
+      decl += "stroke-dashoffset:0;stroke-dasharray:none;";
+    }
+    cloneEl.setAttribute("style", decl);
+
+    var srcKids = srcEl.children || [], cloneKids = cloneEl.children || [];
+    for (var k = 0; k < srcKids.length; k++) {
+      if (cloneKids[k]) inlineStyles(srcKids[k], cloneKids[k]);
+    }
+  }
+
+  /* Rasterize an on-page <svg> into an Image, at a given CSS size.
+     Resolves with a loaded HTMLImageElement ready to draw onto a canvas. */
+  function svgToImage(svgEl, w, h) {
+    return new Promise(function (resolve, reject) {
+      var clone = svgEl.cloneNode(true);
+      inlineStyles(svgEl, clone);
+      clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      clone.setAttribute("width", w);
+      clone.setAttribute("height", h);
+
+      var svgText = new XMLSerializer().serializeToString(clone);
+      /* A data: URL keeps the canvas same-origin, so toBlob() later isn't
+         blocked by tainting. encodeURIComponent (rather than btoa) avoids
+         throwing on the non-Latin1 characters that appear in localized
+         axis labels. */
+      var url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgText);
+      var img = new Image();
+      img.onload = function () { resolve(img); };
+      img.onerror = function () { reject(new Error("SVG rasterization failed")); };
+      img.src = url;
+    });
+  }
+
+  /* Retina-ish output: the canvas is sized in device pixels but drawn in
+     CSS pixels, so exported plots stay crisp when viewed at full size. */
+  function makeCanvas(w, h, scale) {
+    scale = scale || 2;
+    var c = document.createElement("canvas");
+    c.width = w * scale;
+    c.height = h * scale;
+    var ctx = c.getContext("2d");
+    ctx.scale(scale, scale);
+    return { canvas: c, ctx: ctx, w: w, h: h };
+  }
+
+  function downloadCanvas(canvas, filename) {
+    return new Promise(function (resolve, reject) {
+      if (!canvas.toBlob) { reject(new Error("canvas.toBlob unsupported")); return; }
+      canvas.toBlob(function (blob) {
+        if (!blob) { reject(new Error("toBlob returned null")); return; }
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        /* Revoking immediately can cancel the download in some browsers;
+           a tick later is safe and still avoids leaking the object URL. */
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        resolve(blob);
+      }, "image/png");
+    });
+  }
+
+  /* Filenames go into the user's Downloads folder, so strip anything a
+     filesystem might object to and keep it short. */
+  function safeFilename(base, ext) {
+    var s = String(base || "export")
+      .replace(/\.[^.]+$/, "")
+      .replace(/[\\/:*?"<>|]+/g, "-")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 60);
+    return (s || "export") + "." + ext;
+  }
+
+  function todayStamp() {
+    var d = new Date(), p = function (v) { return (v < 10 ? "0" : "") + v; };
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+  }
   /* ---------- formatting ---------- */
   function fmt(r) { return (r < 0 ? "\u2212" : "+") + Math.abs(r).toFixed(2); }
   function fmtPad(r) { return (r < 0 ? "\u2212" : (r > 0 ? "+" : " ")) + Math.abs(r).toFixed(2); }
@@ -503,6 +621,8 @@
     scaler: scaler, fixedScaler: fixedScaler, clipY: clipY, chrome: chrome, dots: dots, fitSvg: fitSvg,
     markSlider: markSlider, clearSlider: clearSlider, leftFor: leftFor,
     parseR: parseR, fmtInput: fmtInput, bindGuess: bindGuess,
+    svgToImage: svgToImage, makeCanvas: makeCanvas, downloadCanvas: downloadCanvas,
+    safeFilename: safeFilename, todayStamp: todayStamp,
     fmt: fmt, fmtPad: fmtPad, bucket: bucket, descKey: descKey, reduced: reduced
   };
   refreshPalette();
