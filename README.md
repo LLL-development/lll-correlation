@@ -1,5 +1,7 @@
 # Guess the Correlation
 
+Developed by LLL Inc.'s dev team — visit us at https://www.live-laugh-love.world
+
 Statistical intuition trainer. Read a scatter plot, guess how correlated the two variables
 are, and find out how close you were — with feedback that explains what the number means.
 
